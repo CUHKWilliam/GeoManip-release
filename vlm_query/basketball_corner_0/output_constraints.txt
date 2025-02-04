@@ -1,0 +1,63 @@
+### Task Decomposition and Flow Control
+
+The task "put the basketball onto the hoop" involves **5 stages**:
+
+1. **Grasp the basketball**  
+2. **Lift the basketball vertically**  
+3. **Move the basketball over the hoop**  
+4. **Move the basketball down onto the hoop**  
+5. **Release the basketball**
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### **Stage 1: Grasp the basketball**
+- **Sub-goal constraints**:
+  - <"grasp", "the body of the basketball">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+  - <"sub-goal constraints", "the heading direction of the gripper binormal of the robot", "the heading direction of the basketball", "the heading direction of the gripper binormal of the robot is perpendicular to the heading direction of the basketball">
+- **Flow constraints**:
+  - <"flow constraints", "grasp successful"> (goto stage 2 if satisfied; retry stage 1 if not satisfied)
+
+---
+
+#### **Stage 2: Lift the basketball vertically**
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the basketball", "the surface of the table", "the center of the body of the basketball is above the surface of the table by 20 centimeters">
+- **Path constraints**:
+  - <"path constraints", "the center of the body of the basketball", "the surface of the table", "the center of the body of the basketball remains directly above the surface of the table">
+- **Flow constraints**:
+  - <"flow constraints", "basketball lifted to target height"> (goto stage 3 if satisfied; retry stage 2 if not satisfied)
+
+---
+
+#### **Stage 3: Move the basketball over the hoop**
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop", "the center of the body of the basketball is directly above the center of the hoop by 20 centimeters">
+- **Path constraints**:
+  - <"path constraints", "the center of the body of the basketball", "the center of the hoop", "the center of the body of the basketball remains at a height of 20 centimeters above the surface of the table">
+- **Flow constraints**:
+  - <"flow constraints", "basketball aligned over hoop"> (goto stage 4 if satisfied; retry stage 3 if not satisfied)
+
+---
+
+#### **Stage 4: Move the basketball down onto the hoop**
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop", "the center of the body of the basketball is inside the hoop">
+- **Path constraints**:
+  - <"path constraints", "the center of the body of the basketball", "the center of the hoop", "the center of the body of the basketball remains aligned with the center of the hoop">
+- **Flow constraints**:
+  - <"flow constraints", "basketball placed in hoop"> (goto stage 5 if satisfied; retry stage 4 if not satisfied)
+
+---
+
+#### **Stage 5: Release the basketball**
+- **Sub-goal constraints**:
+  - <"release">
+- **Flow constraints**:
+  - <"flow constraints", "release successful"> (end task if satisfied; retry stage 5 if not satisfied)
+
+---
+
+### Number of Stages: **5**

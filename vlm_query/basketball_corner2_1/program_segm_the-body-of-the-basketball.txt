@@ -1,0 +1,9 @@
+## mask_indice: 6
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # The body of the basketball is the entire white area in the mask, so we can directly copy the mask
+    mask_output = np.copy(mask)
+    
+    return mask_output

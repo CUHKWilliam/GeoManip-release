@@ -1,0 +1,15 @@
+## mask_indice: 0
+def segment_object(mask):
+    """
+    Process the input segmentation mask to find the body of the red stick.
+    If the input mask already represents the body, return it directly.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of the segmentation mask (H, W).
+        
+    Returns:
+        np.ndarray: Processed mask representing the body of the red stick.
+    """
+    # Directly return the input mask as it already represents the body
+    mask_output = mask.copy()
+    return mask_output

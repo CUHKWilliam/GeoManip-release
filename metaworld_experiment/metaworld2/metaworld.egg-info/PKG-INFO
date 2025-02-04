@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: metaworld
+Version: 0.1.0
+License-File: LICENSE
+Requires-Dist: gym>=0.15.4
+Requires-Dist: mujoco-py==2.1.2.14
+Requires-Dist: numpy>=1.18
+Provides-Extra: dev
+Requires-Dist: ipdb; extra == "dev"
+Requires-Dist: memory_profiler; extra == "dev"
+Requires-Dist: pylint; extra == "dev"
+Requires-Dist: pyquaternion==0.9.5; extra == "dev"
+Requires-Dist: pytest>=4.4.0; extra == "dev"
+Requires-Dist: pytest-xdist; extra == "dev"
+Requires-Dist: scipy; extra == "dev"

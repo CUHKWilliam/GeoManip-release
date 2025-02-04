@@ -1,0 +1,55 @@
+### Task Decomposition and Flow Control
+
+The task "put the round ring into the red stick by grasping the green handle" involves **4 stages**:
+
+1. **Grasp the green handle of the round ring**.
+2. **Align the round ring with the red stick**.
+3. **Insert the round ring into the red stick**.
+4. **Release the round ring**.
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### Stage 1: Grasp the green handle of the round ring
+- **Sub-goal constraints**:
+  - <"grasp", "the handle of the round ring">
+- **Flow constraints**:
+  - <"flow constraint", "goto stage 2 if grasped; retry stage 1 if not grasped">
+
+---
+
+#### Stage 2: Align the round ring with the red stick
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the round ring", "the center of the top of the red stick", "the center of the body of the round ring is directly above the center of the top of the red stick by 5 centimeters">
+  - <"sub-goal constraints", "the plane of the body of the round ring", "the axis of the red stick", "the plane of the body of the round ring is perpendicular to the axis of the red stick">
+- **Flow constraints**:
+  - <"flow constraint", "goto stage 3 if aligned; retry stage 2 if not aligned">
+
+---
+
+#### Stage 3: Insert the round ring into the red stick
+- **Path constraints**:
+  - <"path constraints", "the center of the body of the round ring", "the axis of the red stick", "the center of the body of the round ring remains collinear with the axis of the red stick">
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the round ring", "the center of the body of the red stick", "the center of the body of the round ring is around the center of the body of the red stick by 0 centimeters">
+- **Flow constraints**:
+  - <"flow constraint", "goto stage 4 if inserted; retry stage 3 if not inserted">
+
+---
+
+#### Stage 4: Release the round ring
+- **Sub-goal constraints**:
+  - <"release">
+- **Flow constraints**:
+  - <"flow constraint", "end task">
+
+---
+
+### Summary
+- **Number of stages**: 4
+- **Stages**:
+  1. Grasp the green handle of the round ring.
+  2. Align the round ring with the red stick.
+  3. Insert the round ring into the red stick.
+  4. Release the round ring.

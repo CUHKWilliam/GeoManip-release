@@ -1,0 +1,145 @@
+```python
+import numpy as np
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping the red box)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the red box"> """
+    return grasp("the area of the body of the red box")
+
+
+### <stage constraints splitter> ###
+### stage 2 target constraints (lifting the red box vertically)
+def stage_2_target_constraint1():
+    """constraints: <"targets constraints", "the center of the body of the red box", "the center of the body of the red box at its initial timestamp", "the center of the body of the red box is above the center of the body of the red box at its initial timestamp by around 20 centimeters">"""
+    mask1 = segment("the center of the body of the red box", -1)
+    mask2 = segment("the center of the body of the red box", 0)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the red box at the latest and initial timestamps
+    red_box_center_latest = np.mean(pc1, axis=0)
+    red_box_center_initial = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the centers
+    vertical_distance = red_box_center_latest[2] - red_box_center_initial[2]
+    
+    # The target is to lift the red box by 20 cm
+    cost = abs(vertical_distance - 0.20)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 2 path constraints (lifting the red box vertically)
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the red box", "the plane of the surface of the table", "the center of the body of the red box moves vertically above the plane of the surface of the table">"""
+    mask1 = segment("the center of the body of the red box", -1)
+    mask2 = segment("the plane of the surface of the table", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the red box and the table surface
+    red_box_center = np.mean(pc1, axis=0)
+    table_surface = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the red box and the table surface
+    horizontal_distance = np.linalg.norm(red_box_center[:2] - table_surface[:2])
+    
+    # Ensure the red box moves vertically (no significant horizontal movement)
+    cost = horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (grasping the blue cube)
+def stage_3_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the blue cube"> """
+    return grasp("the area of the body of the blue cube")
+
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints (placing the blue cube onto the middle stack of the shelf)
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the middle stack of the shelf", "the center of the body of the blue cube is directly above the center of the middle stack of the shelf by around 5 centimeters">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the center of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube and the middle stack of the shelf
+    blue_cube_center = np.mean(pc1, axis=0)
+    middle_stack_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - middle_stack_center[:2])
+    
+    # Calculate the vertical distance (z-axis) between the centers
+    vertical_distance = blue_cube_center[2] - middle_stack_center[2]
+    
+    # The target is to place the blue cube 5 cm above the middle stack
+    cost = abs(vertical_distance - 0.05) + horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 4 path constraints (placing the blue cube onto the middle stack of the shelf)
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the blue cube", "the plane of the surface of the middle stack of the shelf", "the center of the body of the blue cube moves vertically above the plane of the surface of the middle stack of the shelf">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the plane of the surface of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube and the middle stack surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    middle_stack_surface = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the blue cube and the middle stack surface
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - middle_stack_surface[:2])
+    
+    # Ensure the blue cube moves vertically (no significant horizontal movement)
+    cost = horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 5 sub-goal constraints (releasing the blue cube)
+def stage_5_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the center of the body of the red box",
+    "the center of the body of the blue cube",
+    "the center of the middle stack of the shelf",
+    "the plane of the surface of the table",
+    "the plane of the surface of the middle stack of the shelf"
+]
+```

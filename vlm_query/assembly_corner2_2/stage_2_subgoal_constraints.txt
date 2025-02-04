@@ -1,0 +1,18 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the round ring", "the center of the body of the red stick", "the center of the body of the round ring is directly above the center of the body of the red stick by 10 cm"> """
+    pc1 = get_point_cloud("the body of the round ring", -1)
+    pc2 = get_point_cloud("the body of the red stick", -1)
+
+    # Compute the mean position of the body of the round ring and the body of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = ring_center[2] - stick_center[2] - 0.1  # 10 cm above
+
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+

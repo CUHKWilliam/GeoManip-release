@@ -1,0 +1,13 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the inner surface of the round ring of the green object", "the outer surface of the red stick of the red object", "the inner surface of the round ring of the green object remains in contact with the outer surface of the red stick of the red object">"""
+    pc1 = get_point_cloud("the inner surface of the round ring of the green object", -1)
+    pc2 = get_point_cloud("the outer surface of the red stick of the red object", -1)
+
+    # Compute the distance between the inner surface of the ring and the outer surface of the stick
+    distances = np.linalg.norm(pc1[:, None, :] - pc2[None, :, :], axis=-1)
+    min_distance = np.min(distances)
+
+    # The cost is the deviation from zero (perfect contact)
+    cost = abs(min_distance)
+    return cost
+

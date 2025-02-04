@@ -1,0 +1,34 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the axis of the body of the basketball", "the plane of the surface of the table", "the axis of the body of the basketball is perpendicular to the plane of the surface of the table">"""
+    mask1 = segment("the axis of the body of the basketball", -1)
+    mask2 = segment("the plane of the surface of the table", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Calculate the axis of the basketball (pc1)
+    covariance_matrix_basketball = np.cov(pc1.T)
+    eigenvalues_basketball, eigenvectors_basketball = np.linalg.eig(covariance_matrix_basketball)
+    basketball_axis = eigenvectors_basketball[:, np.argmax(eigenvalues_basketball)]
+
+    # Calculate the normal vector of the table surface (pc2)
+    covariance_matrix_table = np.cov(pc2.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    table_surface_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+
+    # Normalize both vectors
+    basketball_axis = basketball_axis / np.linalg.norm(basketball_axis)
+    table_surface_normal = table_surface_normal / np.linalg.norm(table_surface_normal)
+    
+    # Compute the dot product between the basketball axis and table surface normal
+    dot_product = np.dot(basketball_axis, table_surface_normal)
+    
+    # The cost is based on how close the dot product is to 0 (perpendicular)
+    cost = abs(dot_product) * 5.
+    
+    return cost
+

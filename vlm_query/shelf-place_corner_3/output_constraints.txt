@@ -1,0 +1,43 @@
+### Task Decomposition and Flow Control
+
+The task "Place the blue cube onto the shelf" involves **4 stages**:
+1. Grasp the blue cube.
+2. Move the blue cube to the shelf.
+3. Place the blue cube on the shelf.
+4. Release the blue cube.
+
+---
+
+### Stage 1: Grasp the blue cube
+- **Sub-goal constraints**:
+  - <"grasp", "the body of the blue cube">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the top surface of the blue cube", "the heading direction of the gripper approach of the robot is perpendicular to the plane of the top surface of the blue cube">
+  - <"sub-goal constraints", "the heading direction of the gripper binormal of the robot", "the plane of the side surface of the blue cube", "the heading direction of the gripper binormal of the robot is perpendicular to the plane of the side surface of the blue cube">
+
+---
+
+### Stage 2: Move the blue cube to the shelf
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the blue cube", "the center of the shelf surface of the shelf", "the center of the body of the blue cube is directly above the center of the shelf surface of the shelf by around 10 centimeters">
+- **Path constraints**:
+  - <"path constraints", "the body of the blue cube", "the body of the shelf", "the body of the blue cube does not collide with the body of the shelf during the movement">
+
+---
+
+### Stage 3: Place the blue cube on the shelf
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the bottom surface of the blue cube", "the top surface of the shelf", "the bottom surface of the blue cube is in contact with the top surface of the shelf">
+  - <"sub-goal constraints", "the plane of the bottom surface of the blue cube", "the plane of the top surface of the shelf", "the plane of the bottom surface of the blue cube is parallel to the plane of the top surface of the shelf">
+
+---
+
+### Stage 4: Release the blue cube
+- **Sub-goal constraints**:
+  - <"release">
+
+---
+
+### Flow Constraints
+- **Stage 1 to Stage 2**: <"flow constraint", "the blue cube is grasped">
+- **Stage 2 to Stage 3**: <"flow constraint", "the blue cube is above the shelf">
+- **Stage 3 to Stage 4**: <"flow constraint", "the blue cube is placed on the shelf">

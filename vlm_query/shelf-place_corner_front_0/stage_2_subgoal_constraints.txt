@@ -1,0 +1,24 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the body of the blue cube at its initial timestamp", "the center of the body of the blue cube is above the center of the body of the blue cube at its initial timestamp by around 20 centimeters">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the center of the body of the blue cube", 0)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube at the latest and initial timestamps
+    center_latest = np.mean(pc1, axis=0)
+    center_initial = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the latest and initial positions
+    vertical_distance = center_latest[2] - center_initial[2]
+    
+    # The target vertical distance is 20 cm
+    cost = abs(vertical_distance - 0.20)
+    
+    return cost
+

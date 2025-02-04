@@ -1,0 +1,47 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the round ring of the round ring", "the center of the top of the red stick of the red stick", "the center of the round ring of the round ring is directly above the center of the top of the red stick of the red stick by 2 centimeters">"""
+    pc1 = get_point_cloud("the round ring of the round ring", -1)
+    pc2 = get_point_cloud("the top of the red stick of the red stick", -1)
+
+    # Compute the center of the round ring and the top of the red stick
+    center_ring = np.mean(pc1, axis=0)
+    center_stick = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(center_ring[:2] - center_stick[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = abs(center_ring[2] - center_stick[2] - 0.02)
+
+    # Cost is the sum of horizontal and vertical deviations
+    cost = horizontal_distance + vertical_distance
+    return cost
+
+def stage_2_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the plane of the round ring of the round ring", "the axis of the red stick of the red stick", "the plane of the round ring of the round ring is perpendicular to the axis of the red stick of the red stick">"""
+    pc1 = get_point_cloud("the round ring of the round ring", -1)
+    pc2 = get_point_cloud("the red stick of the red stick", -1)
+
+    # Calculate the normal vector of the plane of the round ring
+    covariance_matrix_ring = np.cov(pc1.T)
+    eigenvalues_ring, eigenvectors_ring = np.linalg.eig(covariance_matrix_ring)
+    ring_normal = eigenvectors_ring[:, np.argmin(eigenvalues_ring)]
+    if ring_normal[np.argmax(ring_normal)] < 0:
+        ring_normal = -ring_normal
+
+    # Calculate the axis of the red stick
+    covariance_matrix_stick = np.cov(pc2.T)
+    eigenvalues_stick, eigenvectors_stick = np.linalg.eig(covariance_matrix_stick)
+    stick_axis = eigenvectors_stick[:, np.argmax(eigenvalues_stick)]
+    if stick_axis[np.argmax(stick_axis)] < 0:
+        stick_axis = -stick_axis
+
+    # Normalize both vectors
+    ring_normal = ring_normal / np.linalg.norm(ring_normal)
+    stick_axis = stick_axis / np.linalg.norm(stick_axis)
+
+    # Compute the dot product to check perpendicularity
+    dot_product = abs(np.dot(ring_normal, stick_axis))
+    cost = dot_product * 5.0
+    return cost
+

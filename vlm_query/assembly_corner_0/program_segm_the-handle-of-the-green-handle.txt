@@ -1,0 +1,15 @@
+## mask_indice: 1
+## code start here
+def segment_object(mask):
+    """
+    Function to find the handle of the green handle given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: The mask representing the handle, in the same shape (H, W).
+    """
+    # Directly return the input mask as it already represents the handle
+    mask_output = mask.copy()
+    return mask_output

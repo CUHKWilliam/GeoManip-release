@@ -1,0 +1,8 @@
+def stage_3_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 4 if cube is inside the bin; retry stage 3 if not inside">"""
+    cost = stage_3_subgoal_constraint1()
+    if cost < 0.01:  # Threshold for cube inside the bin
+        return 4
+    else:
+        return 3
+

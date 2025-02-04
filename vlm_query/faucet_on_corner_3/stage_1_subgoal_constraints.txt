@@ -1,0 +1,4 @@
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the handle of the red faucet"> """
+    return grasp("the area of the handle of the red faucet")
+

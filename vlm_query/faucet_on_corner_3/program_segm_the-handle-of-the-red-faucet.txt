@@ -1,0 +1,14 @@
+## mask_indice: 1
+def segment_object(mask):
+    ## find out horizontal part of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an empty mask for the output
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through each row to find the horizontal part
+    for i in range(H):
+        if np.any(mask[i, :]):  # Check if there is any True value in the row
+            mask_output[i, :] = mask[i, :]  # Copy the row to the output mask
+    
+    return mask_output

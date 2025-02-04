@@ -1,0 +1,451 @@
+## Query
+Query Task: "put the basketball onto the hoop. HINT: Lift the ball vertically, move over the hoop, then move down right onto the hoop.."
+
+## Some geometry knowledge Here
+Here are some geometry-related knowledge:
+
+Example 1: Given pc as the point cloud of a plate, write a code to find out its axis
+def find_plate_axis(pc):
+    """
+    Finds the axis (normal vector) of a plate given its point cloud.
+
+    Args:
+        pc: numpy array of shape (N, 3), point cloud of the plate.
+
+    Returns:
+        plate_normal: A normalized vector representing the axis (normal vector) of the plate.
+    """
+    # Compute the covariance matrix of the point cloud
+    covariance_matrix = np.cov(pc.T)
+    
+    # Perform eigen decomposition to get eigenvalues and eigenvectors
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+    
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector to the plate's surface
+    plate_normal = eigenvectors[:, np.argmin(eigenvalues)]
+    
+    # Normalize the normal vector
+    plate_normal = plate_normal / np.linalg.norm(plate_normal)
+    
+    return plate_normal
+
+Example 2: given pc as the point cloud of a cylinder, write a code to find out its axis
+def find_cylinder_axis(pc):
+    """
+    Finds the axis of a cylinder given its point cloud.
+
+    Args:
+        pc: numpy array of shape (N, 3), point cloud of the cylinder.
+
+    Returns:
+        cylinder_axis: A normalized vector representing the axis of the cylinder.
+    """
+    # Compute the covariance matrix of the point cloud
+    covariance_matrix = np.cov(pc.T)
+    
+    # Perform eigen decomposition to get eigenvalues and eigenvectors
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+    
+    # The eigenvector corresponding to the largest eigenvalue represents the axis of the cylinder
+    cylinder_axis = eigenvectors[:, np.argmax(eigenvalues)]
+    
+    # Normalize the axis vector
+    cylinder_axis = cylinder_axis / np.linalg.norm(cylinder_axis)
+    
+    return cylinder_axis
+
+Example 3: Given pc1 is the point cloud of the point 1, pc2 is the point cloud of the point 2, write a code to measure the cost that point 2 is directly below point 1
+def measure_point_below(pc1, pc2):
+    """
+    Measures the cost that point 2 is directly below point 1.
+    
+    Args:
+        pc1: numpy array of shape (N, 3), point cloud of point 1.
+        pc2: numpy array of shape (M, 3), point cloud of point 2.
+
+    Returns:
+        cost: a non-negative float representing the extent to which point 2 is directly below point 1.
+              The lower the cost, the more point 2 is directly below point 1.
+    """
+    # Compute the center of mass (mean position) for point 1 and point 2
+    point1_center = np.mean(pc1, axis=0)
+    point2_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(point1_center[:2] - point2_center[:2])
+    
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = point1_center[2] - point2_center[2]
+    
+    # If point 2 is not below point 1, add a large penalty to the cost
+    if vertical_distance < 0:
+        cost = abs(vertical_distance) + horizontal_distance + 1000  # Large penalty for incorrect vertical position
+    else:
+        cost = horizontal_distance
+    
+    return cost
+
+Example 4: Given pc1 is the point cloud of the point 1, pc2 is the point cloud of the point 2, write a code to measure the cost that point 2 is directly to the left of point 1 by 10 cm
+def measure_point_left_by_10cm(pc1, pc2):
+    """
+    Measures the cost that point 2 is directly to the left of point 1 by 10 cm.
+    
+    Args:
+        pc1: numpy array of shape (N, 3), point cloud of point 1.
+        pc2: numpy array of shape (M, 3), point cloud of point 2.
+
+    Returns:
+        cost: a non-negative float representing the extent to which point 2 is directly to the left of point 1 by 10 cm.
+              The lower the cost, the closer point 2 is to being exactly 10 cm to the left of point 1.
+    """
+    # Compute the center of mass (mean position) for point 1 and point 2
+    point1_center = np.mean(pc1, axis=0)
+    point2_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x-axis) between point 1 and point 2
+    x_distance = point2_center[0] - point1_center[0]
+    
+    # Calculate the y and z distances (vertical and depth positions)
+    y_distance = abs(point2_center[1] - point1_center[1])
+    z_distance = abs(point2_center[2] - point1_center[2])
+    
+    # The ideal x distance should be -0.10 meters (to the left by 10 cm)
+    cost = abs(x_distance + 0.10) + y_distance + z_distance  # Sum all deviations from ideal positioning
+    
+    return cost
+
+- To find out the heading direction of long-shaped object, find the max PCA component.
+- To find out the normal of a surface, find the min PCA component.
+- For playing the piano, first find out what are the note (C, G, ...) and play them one by one.
+- To press a button, first move gripper to a point that is perpendicular to the surface of the button, then use contact(), then apply the cost for the button pressing.
+- To segment the right edge of the segmentation mask, find the rightmost white point for each row, then find out the vertical line.
+- To open the door, you may need to compute the rotation matrix using Rodrigues' rotation formula
+- If lifting something, you may lift it vertically to avoid collision with the object nearby. Please watch the image to judge how to move to avoid potential collision.
+## End geometry knowledge
+
+## Instructions
+Suppose you are controlling a robot to perform manipulation tasks by writing constraint functions in Python. The manipulation task is given as an image of the environment. For each given task, please perform the following steps:
+- Determine how many stages are involved in the task. Grasping or releasing must be an independent stage. Some examples:
+  - "pouring tea from teapot":
+    - 3 stages: "grasp teapot", "align teapot with cup opening", and "pour liquid"
+  - "put red block on top of blue block":
+    - 3 stages: "grasp red block", "drop the red block on top of blue block"
+  - "reorient bouquet and drop it upright into vase":
+    - 3 stages: "grasp bouquet", "reorient bouquet", and "keep upright and drop into vase"
+- For each stage except for the grasping and release stage, please write geometric constraints in lines. Each line represent a constraint should be satisfied. Each line is a tuple of multiple element: ("constraints type", "`geometry 1` of `the object part` of `the object` (timestamp), "`geometry 2` of `the object part` of `the object` (timestamp), ...(if any),  "constraints"), each element is explained in the follows:
+  - "geometry":  Basic geometric primitive like the left edge, the center point, the plane, the normal, the right area, heading direction, and etc..
+  - "the object part": the key object part on an object, like the tip, the opening, the handle, the hinge, the slider, the gripper, etc.
+  - "the object": the complete object, like the black cup, the second door, the teapot, the robot, etc.
+  - "constraint": 
+    - 1. basic geometric relationship including parallel, perpendicular, vertical, intersect, and etc.. 
+    - 2. positional constraint like above, below, to the left / right, and etc.. 
+    - 3. Distance range like "by 10 centimeters", "around 10 centimeters", "more than 25 centimeters", "10 centimeters to 20 centimeters", "45 degress", etc..
+    - 4. Transformation like "rotate", "shift", etc.
+  - Specify the <`geometry` of `the object part` of `the object`> in the "constraint"
+  - "timestamp":
+    - By default, if (timestamp) is not specified, the `geometry` if always referred at the latest position.
+    - If you want to specify that the geometry at its initial position, you can say "at its initial timestamp".
+  - "constraints type": 
+    - "targets constraints": `geometry 1`, ... are transformed according to the `constraints`, and the result is pre-computed as the target. The `geometry` should align with the target **at the end of the stage**.
+    - "sub-goal constraints": constraints among `geometry 1`, `geometry 2`, ... that must be satisfied **at the end of the stage**.
+    - "path constraints": constraints among `geometry 1`, `geometry 2`, ... that must be satisfied **within the stage**. 
+  - Strictly follow the format. Do not ignore "of". There must of two "of": "`geometry` of `the object part` of `the object`". If you what to specify `geometry` of the whole object, use `geometry` of the body of `the object`
+- For the grasping stage, output <"grasp", "the area of `the object part` of `the object`">
+- To close the gripper only without grasping anything, output <"grasp", "">
+- If you want to use the gripper, only specify its center position, or the heading direction.
+- For the releasing stage, output <"release">
+- Avoid using the part that is invisible in the image like "bottom", "back part" and etc.
+- Please give as detailed constraint as possible.
+- To move something, you must grasp it first.
+- Each stage can only do a single action one time.
+- The path constraint and sub-goal constraint in the last stage can be the path constraint in the previous stage, unless the constraint should not hold anymore.
+- Don't omit stages for the repeating stages, expand and list them one by one.
+
+Here are some examples:
+  - "pouring liquid from teapot":
+    - "grasp teapot" stage:
+      - <"grasp", "the area of the handle of the teapot">
+    - "align teapot with cup opening" stage:
+      - <"sub-goal constraints", "the center of the teapot spout of the teapot", "the center of the cup opening of the cup", "the center of the teapot spout of the teapot is directly above the center of the cup opening of the cup around 20 centimeters">
+      - <"path constaints", "the axis of the body of the teapot", "the plane of the surface of the table", "the axis of the body of the teapot is perpendicular to the plane of the surface of the table">
+    - "pour liquid" stage:
+      - <"path constaints", "the center of the teapot spout of the teapot", "the center of cup opening of the cup", "the center of the teapot spout of the teapot is directly above the center of cup opening of the cup around 5 centimeters">
+      - <"sub-goal constraints", "the center of the teapot spout of the teapot", "the center of the teapot handle of the teapot", "the center of the teapot spout of the teapot is below the center of the teapot handle of the teapot around 5 centimeters">
+  - "put red block on top of the blue block":
+    - "grasp red block" stage:
+      - <"grasp", "the area of the body of the red block">
+    - "drop the red block on top of blue block" stage:
+      - <"sub-goal constraints", "the center of the red block", "the center of the blue block", "the center of the red block is directly above the center of the blue block around 20 centimeters">
+    - "release the red block" stage:
+      - <"release">
+  - "open the door":
+    - "grasp the door handle" stage:
+      - <"grasp", "the area of the handle of the door">
+    - "pull the door" stage:
+      - <"targets constraints", "the plane of the surface of the door", "the axis of the hinge of the door", "the plane of the surface of the door rotates around the axis of the hinge of the door by 90 degree">
+      - <"sub-goal constaints", "the center of the gripper of the robot at initial frame", "the center of the gripper of the robot", "the axis of the hinge of the door", "the distance between the center of the gripper of the robot at initial frame and the hinge of the body of the door equals the distance between the center of the gripper of the robot and the axis of the hinge of the door">
+    - "release the door" stage:
+      - <"release">
+  - "cut the cucumber with the kitchen knife":
+    - 'grasp the kitchen knife' stage:
+      - <"grasp", "the area of the handle of the kitchen knife">
+    - "hang the knife above the cucumber"
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the body of the cucumber", "the center of the blade of the kitchen knife is directly above the center of the body of the cucumber by 20 cm">
+      - <"path constaints", "the axis of the cucumber", "the plane of the blade of the knife", "the axis of the cucumber is perpendicular to the plane of the blade of the knife">
+      - <"path constaints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife is parallel to the plane of the surface of the table">
+    - "chop the cucumber" stage:
+      - <"path constaints", "the axis of the cucumer", "the plane of the blade of the knife", "the axis of the cucumber is perpendicular to the plane of the blade of the knife"> (remain from the previous constraints)
+      - <"path constaints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife is parallel to the plane of the surface of the table"> (remain from the previous constraints)
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the surface of the table", "the area of the blade of the kitchen knife is above the area of the surface of the table by 1 cm">
+    - "release the cucumber" stage:
+      - <"release">
+  - "open the drawer":
+    - "grasp the drawer handle" stage:
+      - <"grasp", "the area of the drawer of the door">
+    - "pull the drawer" stage:
+      - <"targets constraints", "the plane of the surface of the door", "the axis of the side slider of the drawer", "the plane of the surface of the door shifts along the axis of the side slider of the drawer by around 30 cm">
+    - "release the drawer" stage:
+      - <"release">
+  - "press the button"
+    - "close the gripper" stage:
+      - <"grasp", "">
+    - "move to ready-to-press position" stage:
+      - <"sub-goal constaints", "the center of the gripper of the robot", "the center of the body of the button", "the center of gripper of the robot is directly above the center of the body of the button">
+      - <"sub-goal constaints", "the heading direction of the gripper of the robot", "the plane of the surface of the button", "the heading direction of the gripper of the robot is perpendicular to the plane of the surface of the button">
+    - "pressing" stage:
+      - <"target constaints", "the center of the gripper of the robot", "the center of body of the button", "the center of the gripper of the robot reaches the center of the body of the button">
+      - <"path constaints", "the heading direction of the gripper of the robot", "the plane of the surface of the button", "the heading direction of the gripper of the robot is perpendicular to the plane of the surface of the button">
+Summarize a list of "`geometry` of `the object part` of `the object`" that we need to track. For example:
+  - "pouring liquid from teapot":
+  part_lists = ["the center of handle of the teapot", "the center of spout of the teapot", "the plane of the cup opening of the cup", "the center of the cup opening of the cup", "the plane of the surface of the table"]
+num_stages = ?
+<STEP SPLITTER>
+
+
+
+We can obtain the segmentation mask by calling Python function "segment('`geometry` of `the object part` of `the object`', `timestamp`)".
+  - we record the position of the `geometry` since the grasping / contact stage, and record it into array.
+  - specify `timestamp` to retrive `geometry` mask at the given timestamp. For example, timestamp = 0 to retrieve the initial mask at the time of grasping. timestamp = -1 to retrieve the latest mask.
+  - Example 1, if I want to segment "the axis of the body of the windmill" at its latest timestamp, I can obtain the mask by  "mask = segment('the axis of the body of the windmill', -1)". 
+  - Example 2, if I want to segment "the plane of the surface of the door" at its initial timestamp, I can obtain the mask by "mask = segment('the plane of the surface of the door', 0)".
+- We have another function called "mask_to_pc" which can retrieve the point cloud in the shape N by 3 of the segment part. 
+- Please implement a Python function "stage_i_subgoal_constraints()", "stage_i_path_constraints()" or "stage_i_target_constraints" for all the constraints tuples in the <> brackets one by one, except for the grasping and repleasing constraints. It returns the cost measuring to what extent the constraint is satisfied. The constraint is satisfied when the cost goes down to 0. 
+- Grasping, and releasing should be a seperate stage. For grasping, directly return grasp(geometry of `the object part` of `the object`). For releasing, directly return release().
+- We also have a function called release() to release the object. For the releasing stage, directly call the release function.
+- Please directily generate the Python code. 
+- constraint codes of each stage are splitted by a line "### <stage constraints splitter> ###"
+- the unit of length is meter.
+- The stage start from 1.
+- If it's angle constraint related to parallel or perpendicular, multiply the cost by 5.
+- List as much constraints as possible. Inspect whether there is a constraint between each pair of objects.
+- Don't omit stages for the repeating stages, expand and list them one by one.
+
+Here are some examples:
+
+### <stage constraints splitter> ### (if any)
+### stage ? sub-goal constraints
+def stage_?_subgoal_constraint1():
+  """constraints: <"grasp", "the area of the body of the banana"> """
+    return grasp("the area of the body of the banana")
+
+
+### <stage constraints splitter> ###
+### stage ? sub-goal constraints 
+def stage_?_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the axis of the body of the cucumber", "the plane of the blade of the kitchen knife", "the axis of the body of the cucumber is perpendicular to the plane of the blade of the kitchen knife"> (for cutting cucumber)""" 
+    mask1 = segment("the axis of the body of the cucumber", -1)
+    mask2 = segment("the plane of the blade of the kitchen knife", -1)
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Calculate the axis of the the body of the cucumber (pc1)
+    # Compute the covariance matrix of the points in the point cloud
+    covariance_matrix_cucumber = np.cov(pc1.T)
+    # Get the eigenvalues and eigenvectors of the covariance matrix
+    eigenvalues_cucumber, eigenvectors_cucumber = np.linalg.eig(covariance_matrix_cucumber)
+    # The eigenvector corresponding to the largest eigenvalue is the axis of the body of the cucumber
+    cucumber_axis = eigenvectors_cucumber[:, np.argmax(eigenvalues_cucumber)]
+
+    # Calculate the normal vector of the plane of the blade of the kitchen knife (pc2)
+    covariance_matrix_knife = np.cov(pc2.T)
+    eigenvalues_knife, eigenvectors_knife = np.linalg.eig(covariance_matrix_knife)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    knife_surface_normal = eigenvectors_knife[:, np.argmin(eigenvalues_knife)]
+
+    # Normalize both vectors
+    cucumber_axis = cucumber_axis / np.linalg.norm(cucumber_axis)
+    knife_surface_normal = knife_surface_normal / np.linalg.norm(knife_surface_normal)
+    
+    # Compute the dot product between the cucumber axis and knife surface normal
+    dot_product = np.dot(cucumber_axis, knife_surface_normal)
+    
+    # The cost is based on how close the dot product is to 0
+    cost = abs(dot_product) * 5.
+    
+    return cost
+
+def stage_?_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the center of the body of the cucumber", "the center of the body of the kitchen knife", "the center of the body of the cucumber is directly above the center of the body of the kitchen knife by 10cm"> (for cutting cucumber)"""
+    mask1 = segment("the center of the body of the cucumber", -1)
+    mask2 = segment("the center of the body of the kitchen knife", -1)
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the body the cucumber and the body of the kitchen knife
+    body_of_cucumber_center = np.mean(pc1, axis=0)
+    body_of_knife_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(body_of_cucumber_center[:2] - body_of_knife_center[:2])
+    
+    # Calculate the center of the body of the knife center should be 20 cm above the center of the body of the cucumber
+    vertical_distance = body_of_knife_center[2] - 0.1 - body_of_cucumber_center[2]
+    
+    cost = abs(vertical_distance) + horizontal_distance
+    
+    return cost
+
+def stage_?_subgoal_constraint3():
+    """constraints: <"sub-goal constraints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife is parallel to the plane of the surface of the table"> (for cutting cucumber)""" 
+    mask1 = segment("the heading direction of the blade of the knife", -1)
+    mask2 = segment("the plane of the surface of the table", -1)
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Calculate the heading direction vector of the plane of the blade of the knife (pc1)
+    covariance_matrix_knife = np.cov(pc2.T)
+    eigenvalues_knife, eigenvectors_knife = np.linalg.eig(covariance_matrix_knife)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    knife_surface_heading = eigenvectors_knife[:, np.argmin(eigenvalues_knife)]
+
+    # Calculate the normal vector of the plane of the surface of the table (pc2)
+    covariance_matrix_table = np.cov(pc2.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    table_surface_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+
+    # Normalize both vectors
+    table_surface_normal = table_surface_normal / np.linalg.norm(table_surface_normal)
+    knife_surface_heading = knife_surface_heading / np.linalg.norm(knife_surface_heading)
+    
+    # Compute the dot product between the table axis and knife surface normal
+    dot_product = np.dot(table_surface_normal, knife_surface_heading)
+    
+    # the normal of the plane of the table should be perpendicular to the heading direction of the blade of the knife
+    cost = abs(dot_product) * 5.
+    return cost
+
+def stage_?_targets_constraint1():
+    """constraints: <"target constraints", "the plane of the surface of the door", "the axis of the hinge of the door", "the plane of the surface of the door rotate around the axis of the hinge of the door by 60 degrees"> (for opening the door)"""
+    mask1 = segment("the plane of surface of the door", -1)
+    mask1_initial = segment("the plane of the surface of the door", 0)
+    mask2 = segment("the axis of the hinge of the door", -1)
+    if mask1.shape[-1] == 3:
+        pc1_initial = mask1_initial
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1_initial = mask_to_pc(mask1_initial)
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Step 1: center pc1_initial at the center of pc2
+    pc2_mean = pc2.mean(0)
+    pc2 -= pc2_mean
+    pc1_initial -= pc2_mean
+
+    # Step 2: Normalize the axis of the hinge of the door (from pc2)
+    covariance_matrix_door = np.cov(pc2.T)
+    eigenvalues_door, eigenvectors_door = np.linalg.eig(covariance_matrix_door)
+    door_axis = eigenvectors_door[:, np.argmax(eigenvalues_door)]
+    door_axis = door_axis / np.linalg.norm(door_axis)  # Normalize the axis vector
+
+    # Step 3: Convert the angle from degrees to radians
+    angle_radians = np.radians(angle_degrees)
+
+    # Step 4: Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -door_axis[2], door_axis[1]],
+                  [door_axis[2], 0, -door_axis[0]],
+                  [-door_axis[1], door_axis[0], 0]])  # Skew-symmetric matrix for door_axis
+    I = np.eye(3)  # Identity matrix
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Step 5: Rotate each point in pc1
+    rotated_pc1 = np.dot(pc1_initial, rotation_matrix.T)  # Apply rotation matrix to each point
+
+    # Step 6: Restore the position of rotated_pc1 and pc2
+    rotated_pc1 += pc2_mean
+    pc2 += pc2_mean
+
+    # Step 5: compute the cost of how pc1 aligns with rotated_pc1.
+    distances = np.linalg.norm(pc1 - rotated_pc1, axis=1)
+    cost = np.sum(distances)
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage ? sub-goal constraints
+def stage_?_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+Please write the codes below:
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (if any)
+## if it is a grasping constaints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "`geometry` of `the object part' of `the object`"> """
+    return grasp("`geometry` of `the object part' of `the object`")
+
+
+def stage_1_subgoal_constraint1():
+    """constraints: <?, ?, ?,..., ?>"""
+    mask1 = segment(?)
+    mask2 = segment(?)
+    ## TODO: must have these line
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    ## end TODO
+    ...
+    return cost
+# Add more sub-goal constraints if needed
+...
+
+### stage 1 path constraints (if any)
+def stage_1_path_constraint1():
+    """constraints: <?, ?, ?, ?>"""
+    mask1 = segment(?)
+    mask2 = segment(?)
+    ## TODO: must have these line
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    ## end TODO
+    ...
+    return cost
+
+# Add more path constraints if needed
+...
+
+Finally, write a list of "`geometry` of `the object part` of `the object`" in all the <> brackets:
+object_to_segment = [?]

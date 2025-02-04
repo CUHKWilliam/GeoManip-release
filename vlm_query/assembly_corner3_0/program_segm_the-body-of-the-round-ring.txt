@@ -1,0 +1,15 @@
+## mask_indice: 1
+## code start here
+def segment_object(mask):
+    """
+    Function to find the body of the round ring given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: The mask corresponding to the body of the round ring.
+    """
+    # Directly return the input mask as it already represents the body of the round ring
+    mask_output = mask.copy()
+    return mask_output

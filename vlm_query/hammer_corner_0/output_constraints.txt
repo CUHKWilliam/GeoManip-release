@@ -1,0 +1,54 @@
+### Task Decomposition and Flow Control
+
+The task "use the hammer to smash the nail on the side" involves **5 stages**:
+
+1. Grasp the hammer.
+2. Align the hammer with the nail.
+3. Move the hammer to a ready-to-strike position.
+4. Strike the nail with the hammer.
+5. Release the hammer.
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### Stage 1: Grasp the hammer
+- **Sub-goal constraints**:
+  - <"grasp", "the handle of the hammer">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the axis of the handle of the hammer", "the heading direction of the gripper approach of the robot is perpendicular to the axis of the handle of the hammer">
+  - <"sub-goal constraints", "the heading direction of the gripper binormal of the robot", "the axis of the handle of the hammer", "the heading direction of the gripper binormal of the robot is parallel to the axis of the handle of the hammer">
+
+---
+
+#### Stage 2: Align the hammer with the nail
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the head of the hammer", "the center of the head of the nail", "the center of the head of the hammer is directly above the center of the head of the nail by 5 centimeters">
+  - <"sub-goal constraints", "the plane of the head of the hammer", "the plane of the head of the nail", "the plane of the head of the hammer is parallel to the plane of the head of the nail">
+
+---
+
+#### Stage 3: Move the hammer to a ready-to-strike position
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the head of the hammer", "the center of the head of the nail", "the center of the head of the hammer is directly above the center of the head of the nail by 10 centimeters">
+  - <"sub-goal constraints", "the plane of the head of the hammer", "the plane of the head of the nail", "the plane of the head of the hammer is parallel to the plane of the head of the nail">
+
+---
+
+#### Stage 4: Strike the nail with the hammer
+- **Path constraints**:
+  - <"path constraints", "the center of the head of the hammer", "the center of the head of the nail", "the center of the head of the hammer moves toward the center of the head of the nail along a straight line">
+  - <"path constraints", "the plane of the head of the hammer", "the plane of the head of the nail", "the plane of the head of the hammer remains parallel to the plane of the head of the nail">
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the head of the hammer", "the center of the head of the nail", "the center of the head of the hammer is in contact with the center of the head of the nail">
+
+---
+
+#### Stage 5: Release the hammer
+- **Sub-goal constraints**:
+  - <"release">
+
+---
+
+### Flow Constraints
+- **Stage 2 Flow Constraint**: <"flow constraint", "the hammer is aligned with the nail"> (go to stage 3 if satisfied; go to stage 2 if not satisfied)
+- **Stage 4 Flow Constraint**: <"flow constraint", "the nail is fully struck"> (go to stage 5 if satisfied; go to stage 4 if not satisfied)

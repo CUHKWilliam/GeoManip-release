@@ -1,0 +1,18 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball remains aligned with the center of the red hoop while moving vertically downward">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_basketball_initial = get_point_cloud("the body of the basketball", -2)
+    pc_hoop = get_point_cloud("the red hoop", -1)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc_basketball, axis=0)
+    center_initial = np.mean(pc_basketball_initial, axis=0)
+    center_hoop = np.mean(pc_hoop, axis=0)
+
+    # Calculate the horizontal displacement
+    horizontal_displacement = np.linalg.norm(center_current[:2] - center_hoop[:2])
+
+    # The basketball should remain aligned with the hoop
+    cost = horizontal_displacement
+    return cost
+

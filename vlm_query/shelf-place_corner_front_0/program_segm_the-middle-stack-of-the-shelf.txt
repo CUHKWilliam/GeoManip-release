@@ -1,0 +1,16 @@
+## mask_indice: 17
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize the output mask with the same shape as the input mask
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Find the middle third of the mask along the height (H)
+    middle_start = H // 3
+    middle_end = 2 * H // 3
+    
+    # Copy the middle third of the mask to the output
+    mask_output[middle_start:middle_end, :] = mask[middle_start:middle_end, :]
+    
+    return mask_output

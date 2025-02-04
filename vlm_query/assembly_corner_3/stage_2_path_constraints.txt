@@ -1,0 +1,19 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the ring of the round ring", "the center of the stick of the red stick", "the center of the ring of the round ring remains above the center of the stick of the red stick"> """
+    pc1 = get_point_cloud("the ring of the round ring", -1)
+    pc2 = get_point_cloud("the stick of the red stick", -1)
+
+    # Compute the mean position of the ring and the stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    # Ensure the ring remains above the stick
+    vertical_distance = ring_center[2] - stick_center[2]
+
+    # Penalize if the ring is not above the stick
+    cost = horizontal_distance + (0 if vertical_distance > 0 else abs(vertical_distance) + 1000)
+    return cost
+

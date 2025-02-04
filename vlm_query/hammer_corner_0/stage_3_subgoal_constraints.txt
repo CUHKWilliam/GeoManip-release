@@ -1,0 +1,17 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the head of the hammer", "the head of the nail", "the head of the hammer moves toward the head of the nail by 10 cm">"""
+    pc1_previous = get_point_cloud("the head of the hammer", -2)
+    pc1_current = get_point_cloud("the head of the hammer", -1)
+    pc2 = get_point_cloud("the head of the nail", -1)
+
+    # Compute the direction vector from the hammer head to the nail head
+    direction_vector = np.mean(pc2, axis=0) - np.mean(pc1_previous, axis=0)
+    direction_vector = direction_vector / np.linalg.norm(direction_vector)  # Normalize the vector
+
+    # Compute the target position of the hammer head
+    target_position = np.mean(pc1_previous, axis=0) + direction_vector * 0.10
+
+    # Cost is the deviation of the current hammer head position from the target position
+    cost = np.linalg.norm(np.mean(pc1_current, axis=0) - target_position)
+    return cost
+

@@ -1,0 +1,9 @@
+## mask_indice: 1
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # The area of the object is already highlighted in the mask, so we can directly return it
+    mask_output = mask.copy()
+    
+    return mask_output

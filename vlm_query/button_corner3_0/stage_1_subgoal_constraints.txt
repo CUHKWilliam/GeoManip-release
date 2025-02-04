@@ -1,0 +1,4 @@
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", ""> (close the gripper to prepare for pressing)"""
+    return grasp("")
+

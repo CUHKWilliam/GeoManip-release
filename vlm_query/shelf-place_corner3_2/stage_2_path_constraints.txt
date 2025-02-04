@@ -1,0 +1,15 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the blue cube", "the center of the shelf surface", "the center of the body of the blue cube remains directly above the center of the shelf surface">"""
+    pc1 = get_point_cloud("the body of the blue cube", -1)
+    pc2 = get_point_cloud("the surface of the shelf", -1)
+
+    # Compute the center of mass (mean position) for the blue cube and the shelf surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    shelf_surface_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - shelf_surface_center[:2])
+    
+    cost = horizontal_distance
+    return cost
+

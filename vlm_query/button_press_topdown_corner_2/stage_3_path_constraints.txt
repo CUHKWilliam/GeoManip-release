@@ -1,0 +1,19 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the distance between the center of the gripper of the robot and the center of the body of the red button decreases by 100 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the center of the gripper and the button
+    gripper_center_previous = np.mean(pc_gripper_previous, axis=0)
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the previous and current distances
+    distance_previous = np.linalg.norm(gripper_center_previous - button_center)
+    distance_current = np.linalg.norm(gripper_center - button_center)
+
+    # The target decrease in distance is 100 cm = 1.0 m
+    cost = abs((distance_previous - distance_current) - 1.0)
+    return cost
+

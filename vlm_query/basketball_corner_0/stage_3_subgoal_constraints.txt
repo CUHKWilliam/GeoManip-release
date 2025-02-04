@@ -1,0 +1,13 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop opening of the red hoop", "the center of the body of the basketball is directly above the center of the hoop opening of the hoop by 10 cm">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(pc1.mean(0)[:2] - pc2.mean(0)[:2])
+
+    # Calculate the vertical distance (z-axis) between the basketball and the red hoop
+    vertical_distance = pc1.mean(0)[2] - pc2.mean(0)[2] - 0.1
+    cost = abs(horizontal_distance) + abs(vertical_distance)
+    return cost
+

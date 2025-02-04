@@ -1,0 +1,14 @@
+## mask_indice: 0
+def segment_object(mask):
+    """
+    Find the hoop opening of the red hoop given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: Mask of the hoop opening in shape (H, W).
+    """
+    # Convert mask to uint8 if not already
+    
+    return mask

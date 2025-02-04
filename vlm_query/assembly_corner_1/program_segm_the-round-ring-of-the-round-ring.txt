@@ -1,0 +1,15 @@
+## mask_indice: 0
+def segment_object(mask):
+    """
+    Process the input mask to find the round ring of the round ring.
+    If the input mask is already what we want, directly return it.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: Processed mask in the same shape (H, W).
+    """
+    # Directly return the input mask as it already represents the area of the round ring
+    mask_output = mask.copy()
+    return mask_output

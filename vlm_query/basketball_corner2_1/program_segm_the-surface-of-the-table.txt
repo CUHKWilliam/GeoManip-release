@@ -1,0 +1,15 @@
+## mask_indice: 3
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize the output mask with the same shape as the input mask
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through the mask and copy the area where the mask is True
+    for i in range(H):
+        for j in range(W):
+            if mask[i, j]:  # If the pixel is part of the segmentation (True)
+                mask_output[i, j] = True  # Copy it to the output mask
+    
+    return mask_output

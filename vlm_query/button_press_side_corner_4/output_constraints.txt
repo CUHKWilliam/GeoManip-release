@@ -1,0 +1,115 @@
+### Task Decomposition and Flow Control
+
+The task "press the body of the red button" involves **3 stages**:
+
+1. **Close the gripper** (to prepare for pressing).
+2. **Move to the ready-to-press position** (align the gripper with the red button).
+3. **Press the red button** (move the gripper toward the button).
+
+---
+
+### Python Cost Functions for Geometric and Flow Constraints
+
+### <stage constraints splitter> ###
+### Stage 1: Close the gripper
+#### Sub-goal constraints
+```python
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "">"""
+    return grasp("")
+```
+
+---
+
+### <stage constraints splitter> ###
+### Stage 2: Move to the ready-to-press position
+#### Sub-goal constraints
+```python
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot is colinear with the normal of the center of the body of the red button by 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Compute the center of the gripper and the button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Compute the normal vector of the button
+    covariance_matrix_button = np.cov(pc_button.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Compute the vector from the gripper center to the button center
+    vector_to_button = button_center - gripper_center
+    vector_to_button = vector_to_button / np.linalg.norm(vector_to_button)
+
+    # Check colinearity of the gripper center, button center, and button normal
+    dot_product = np.dot(vector_to_button, button_normal)
+    cost = (1 - abs(dot_product)) + abs(np.linalg.norm(gripper_center - button_center) - 0.1)
+
+    return cost
+```
+
+---
+
+### <stage constraints splitter> ###
+### Stage 3: Press the red button
+#### Sub-goal constraints
+```python
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot moves toward the center of the body of the red button by 5 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper_current = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Compute the center of the gripper and the button
+    gripper_previous_center = np.mean(pc_gripper_previous, axis=0)
+    gripper_current_center = np.mean(pc_gripper_current, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Compute the target position for the gripper
+    vector_to_button = button_center - gripper_previous_center
+    vector_to_button = vector_to_button / np.linalg.norm(vector_to_button)
+    target_position = gripper_previous_center + vector_to_button * 0.05
+
+    # Compute the cost as the distance between the current gripper position and the target position
+    cost = np.linalg.norm(gripper_current_center - target_position)
+
+    return cost
+```
+
+---
+
+### Flow Constraints
+#### Stage 1 Flow Constraints
+```python
+def stage_1_flow_constraints():
+    """Flow constraint: proceed to stage 2 after gripper is closed"""
+    return 2
+```
+
+#### Stage 2 Flow Constraints
+```python
+def stage_2_flow_constraints():
+    """Flow constraint: proceed to stage 3 after alignment is achieved"""
+    return 3
+```
+
+#### Stage 3 Flow Constraints
+```python
+def stage_3_flow_constraints():
+    """Flow constraint: end task after pressing is completed"""
+    return None
+```
+
+---
+
+### List of `geometry` of `the object part` of `the object`
+```python
+object_to_segment = [
+    "the gripper of the robot",
+    "the body of the red button"
+]
+```

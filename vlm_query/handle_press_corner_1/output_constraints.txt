@@ -1,0 +1,35 @@
+### Task Decomposition and Flow Control
+
+The task "press the red handle" involves **3 stages**:
+1. Grasp the red handle.
+2. Press the red handle.
+3. Release the red handle.
+
+---
+
+### Stage 1: Grasp the red handle
+- **Sub-goal constraints**:
+  - <"grasp", "the handle of the red handle">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the normal of the handle of the red handle", "the heading direction of the gripper approach of the robot is parallel to the normal of the handle of the red handle">
+  - <"sub-goal constraints", "the heading direction of the gripper binormal of the robot", "the axis of the handle of the red handle", "the heading direction of the gripper binormal of the robot is perpendicular to the axis of the handle of the red handle">
+
+---
+
+### Stage 2: Press the red handle
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the gripper of the robot", "the center of the handle of the red handle", "the center of the gripper of the robot moves toward the center of the handle of the red handle by 5 cm">
+- **Path constraints**:
+  - <"path constraints", "the center of the gripper of the robot", "the center of the handle of the red handle", "the center of the gripper of the robot remains collinear with the center of the handle of the red handle along the pressing direction">
+- **Flow constraints**:
+  - <"flow constraints", "the handle is fully pressed"> (go to stage 3 if satisfied; repeat stage 2 if not satisfied)
+
+---
+
+### Stage 3: Release the red handle
+- **Sub-goal constraints**:
+  - <"release">
+
+---
+
+### Number of Stages
+**3 stages**

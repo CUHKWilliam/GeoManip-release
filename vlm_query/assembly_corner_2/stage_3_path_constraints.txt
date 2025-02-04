@@ -1,0 +1,23 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the round ring of the round ring", "the axis of the red stick of the red stick", "the center of the round ring of the round ring remains collinear with the axis of the red stick of the red stick">"""
+    pc1 = get_point_cloud("the round ring of the round ring", -1)
+    pc2 = get_point_cloud("the red stick of the red stick", -1)
+
+    # Compute the center of the round ring
+    center_ring = np.mean(pc1, axis=0)
+
+    # Compute the axis of the red stick
+    covariance_matrix_stick = np.cov(pc2.T)
+    eigenvalues_stick, eigenvectors_stick = np.linalg.eig(covariance_matrix_stick)
+    stick_axis = eigenvectors_stick[:, np.argmax(eigenvalues_stick)]
+    if stick_axis[np.argmax(stick_axis)] < 0:
+        stick_axis = -stick_axis
+
+    # Project the center of the round ring onto the axis of the red stick
+    stick_center = np.mean(pc2, axis=0)
+    projection = stick_center + np.dot(center_ring - stick_center, stick_axis) * stick_axis
+
+    # Compute the cost as the distance between the projected point and the actual center of the round ring
+    cost = np.linalg.norm(center_ring - projection)
+    return cost
+

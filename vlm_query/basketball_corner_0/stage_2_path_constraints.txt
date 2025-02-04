@@ -1,0 +1,11 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball remains directly above its previous position">"""
+    pc1 = get_point_cloud("the body of the basketball", -2)
+    pc2 = get_point_cloud("the body of the basketball", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the previous and current positions
+    horizontal_distance = np.linalg.norm(pc2.mean(0)[:2] - pc1.mean(0)[:2])
+
+    cost = horizontal_distance
+    return cost
+

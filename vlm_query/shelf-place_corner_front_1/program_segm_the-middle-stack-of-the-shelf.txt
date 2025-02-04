@@ -1,0 +1,16 @@
+## mask_indice: 1
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Create an empty mask for the middle stack
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Define the middle region (1/3rd to 2/3rd of the width)
+    left_bound = W // 3
+    right_bound = 2 * W // 3
+    
+    # Copy the middle region from the original mask
+    mask_output[:, left_bound:right_bound] = mask[:, left_bound:right_bound]
+    
+    return mask_output

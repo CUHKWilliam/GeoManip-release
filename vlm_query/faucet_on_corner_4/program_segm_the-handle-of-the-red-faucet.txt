@@ -1,0 +1,12 @@
+## mask_indice: 5
+def segment_object(mask):
+    # Initialize the output mask with the same shape as the input mask
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through the mask and copy the area where the object is segmented (True values)
+    for i in range(mask.shape[0]):
+        for j in range(mask.shape[1]):
+            if mask[i, j]:
+                mask_output[i, j] = True
+    
+    return mask_output

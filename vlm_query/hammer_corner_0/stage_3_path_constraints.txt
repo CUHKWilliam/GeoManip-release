@@ -1,0 +1,17 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the head of the hammer", "the head of the nail", "the head of the hammer moves directly toward the head of the nail">"""
+    pc1_previous = get_point_cloud("the head of the hammer", -2)
+    pc1_current = get_point_cloud("the head of the hammer", -1)
+    pc2 = get_point_cloud("the head of the nail", -1)
+
+    # Compute the direction vector from the hammer head to the nail head
+    direction_vector = np.mean(pc2, axis=0) - np.mean(pc1_previous, axis=0)
+    direction_vector = direction_vector / np.linalg.norm(direction_vector)  # Normalize the vector
+
+    # Compute the movement vector of the hammer head
+    movement_vector = np.mean(pc1_current, axis=0) - np.mean(pc1_previous, axis=0)
+
+    # Cost is the deviation of the movement vector from the direction vector
+    cost = np.linalg.norm(movement_vector - direction_vector)
+    return cost
+

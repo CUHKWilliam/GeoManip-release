@@ -1,0 +1,19 @@
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball is inside the red hoop">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_hoop = get_point_cloud("the red hoop", -1)
+
+    # Compute the center of the basketball and the red hoop
+    center_basketball = np.mean(pc_basketball, axis=0)
+    center_hoop = np.mean(pc_hoop, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates)
+    horizontal_distance = np.linalg.norm(center_basketball[:2] - center_hoop[:2])
+
+    # Calculate the vertical displacement
+    vertical_displacement = abs(center_basketball[2] - center_hoop[2])
+
+    # The basketball should be inside the hoop (minimal horizontal distance and vertical alignment)
+    cost = horizontal_distance + vertical_displacement
+    return cost
+

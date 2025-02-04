@@ -1,0 +1,100 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the handle of the red faucet"> """
+    return grasp("the area of the handle of the red faucet")
+
+### <stage constraints splitter> ###
+### stage 2 target constraints
+def stage_2_target_constraint1():
+    """constraints: <"target constraints", "the center of the handle of the red faucet", "the axis of the body of the red faucet", "the center of the handle of the red faucet rotates around the axis of the body of the red faucet by 90 degrees">"""
+    # Segment the center of the handle and the axis of the body of the red faucet
+    mask1 = segment("the center of the handle of the red faucet", -2)
+    mask2 = segment("the axis of the body of the red faucet", -2)
+    
+    # Convert masks to point clouds
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Step 1: Find the axis of the body of the red faucet (pc2)
+    covariance_matrix_faucet = np.cov(pc2.T)
+    eigenvalues_faucet, eigenvectors_faucet = np.linalg.eig(covariance_matrix_faucet)
+    faucet_axis = eigenvectors_faucet[:, np.argmax(eigenvalues_faucet)]
+    faucet_axis = faucet_axis / np.linalg.norm(faucet_axis)  # Normalize the axis vector
+
+    # Step 2: Convert the angle from degrees to radians (90 degrees)
+    angle_radians = np.radians(90)
+
+    # Step 3: Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -faucet_axis[2], faucet_axis[1]],
+                  [faucet_axis[2], 0, -faucet_axis[0]],
+                  [-faucet_axis[1], faucet_axis[0], 0]])  # Skew-symmetric matrix for faucet_axis
+    I = np.eye(3)  # Identity matrix
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Step 4: Rotate each point in pc1 (center of the handle)
+    rotated_pc1 = np.dot(pc1 - pc2.mean(0), rotation_matrix.T) + pc2.mean(0)  # Apply rotation matrix to the pc1
+
+    # Step 5: Compute the cost of how the current pc1 aligns with the rotated pc1
+    mask1_current = segment("the center of the handle of the red faucet", -1)  # Current position
+    if mask1_current.shape[-1] == 3:
+        pc1_current = mask1_current
+    else:
+        pc1_current = mask_to_pc(mask1_current)
+    
+    distances = np.linalg.norm(pc1_current - rotated_pc1, axis=1)  # Calculate the distance between current and target positions
+    cost = np.sum(distances)
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the handle of the red faucet", "the axis of the body of the red faucet", "the center of the handle of the red faucet remains on the circular path around the axis of the body of the red faucet">"""
+    # Segment the center of the handle and the axis of the body of the red faucet
+    mask1 = segment("the center of the handle of the red faucet", -1)
+    mask2 = segment("the axis of the body of the red faucet", -1)
+    
+    # Convert masks to point clouds
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Step 1: Find the axis of the body of the red faucet (pc2)
+    covariance_matrix_faucet = np.cov(pc2.T)
+    eigenvalues_faucet, eigenvectors_faucet = np.linalg.eig(covariance_matrix_faucet)
+    faucet_axis = eigenvectors_faucet[:, np.argmax(eigenvalues_faucet)]
+    faucet_axis = faucet_axis / np.linalg.norm(faucet_axis)  # Normalize the axis vector
+
+    # Step 2: Calculate the vector from the center of the handle to the axis of the faucet
+    handle_to_axis_vector = np.mean(pc1, axis=0) - np.mean(pc2, axis=0)
+    
+    # Step 3: Project the handle_to_axis_vector onto the plane perpendicular to the faucet axis
+    projection = handle_to_axis_vector - np.dot(handle_to_axis_vector, faucet_axis) * faucet_axis
+    
+    # Step 4: Compute the cost based on how far the handle deviates from the circular path
+    deviation = np.linalg.norm(projection)
+    cost = deviation
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (releasing)
+def stage_3_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### Enumerate all the "`geometry` of `the object part` of `the object`" in all the constraints and all the grasp stages:
+object_to_segment = [
+    "the area of the handle of the red faucet",
+    "the center of the handle of the red faucet",
+    "the axis of the body of the red faucet"
+]

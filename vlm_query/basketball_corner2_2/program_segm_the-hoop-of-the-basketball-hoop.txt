@@ -1,0 +1,12 @@
+## mask_indice: 9
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize the output mask with the same shape
+    mask_output = np.zeros((H, W), dtype=bool)
+    
+    # Copy the area of the hoop (white part in the mask) to the output mask
+    mask_output[mask == True] = True
+    
+    return mask_output

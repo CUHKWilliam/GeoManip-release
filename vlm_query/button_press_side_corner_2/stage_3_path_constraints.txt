@@ -1,0 +1,24 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot remains colinear with the normal of the body of the red button">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Compute the center of the gripper and the button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Compute the normal vector of the button
+    covariance_matrix_button = np.cov(pc_button.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Compute the vector from the button center to the gripper center
+    vector_to_gripper = gripper_center - button_center
+    vector_to_gripper = vector_to_gripper / np.linalg.norm(vector_to_gripper)  # Normalize
+
+    # Compute the cost as the deviation from colinearity
+    cost = np.linalg.norm(vector_to_gripper - button_normal)
+    return cost
+

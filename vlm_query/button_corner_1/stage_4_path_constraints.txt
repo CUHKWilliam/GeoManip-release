@@ -1,0 +1,27 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button of the button", "the center of the gripper of the robot moves away from the center of the body of the red button of the button">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask2 = segment("the center of the body of the red button of the button", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Calculate the direction vector from the gripper to the button
+    direction_vec = np.mean(pc1, axis=0) - np.mean(pc2, axis=0)
+    direction_vec = direction_vec / np.linalg.norm(direction_vec)
+
+    # Calculate the current gripper position
+    current_gripper_position = np.mean(pc1, axis=0)
+
+    # Calculate the target position (move away from the button)
+    target_position = np.mean(pc2, axis=0)
+
+    # The cost is the distance between the current gripper position and the target position
+    cost = np.linalg.norm(current_gripper_position - target_position)
+    
+    return cost
+

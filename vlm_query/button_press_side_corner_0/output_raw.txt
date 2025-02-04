@@ -1,0 +1,126 @@
+Here is the Python implementation for the task "press the body of the red button":
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+```python
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "">"""
+    return grasp("")
+```
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+```python
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the body of the red button", "the center of the gripper of the robot colinear with the normal of the body of the red button by 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the normal vector of the body of the red button
+    covariance_matrix_button = np.cov(pc_button.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Calculate the center of the gripper and the body of the red button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the target position for the gripper
+    import ipdb;ipdb.set_trace()
+    target_position = button_center + button_normal * 0.1  # 10 cm along the button's normal
+
+    # Calculate the cost as the distance between the gripper's center and the target position
+    cost = np.linalg.norm(gripper_center - target_position)
+    return cost
+```
+
+### stage 2 path constraints
+```python
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the body of the red button", "the distance between the center of the gripper of the robot and the body of the red button remains 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the center of the gripper and the body of the red button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the distance between the gripper's center and the button's center
+    distance = np.linalg.norm(gripper_center - button_center)
+
+    # The ideal distance is 10 cm
+    cost = abs(distance - 0.1)
+    return cost
+```
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+```python
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot moves toward the center of the body of the red button by 30 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the center of the gripper and the body of the red button
+    gripper_center_previous = np.mean(pc_gripper_previous, axis=0)
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the direction vector from the gripper's previous center to the button's center
+    direction_vector = button_center - gripper_center_previous
+    direction_vector = direction_vector / np.linalg.norm(direction_vector)
+
+    # Calculate the target position for the gripper
+    target_position = gripper_center_previous + direction_vector * 0.3  # Move 30 cm toward the button's center
+
+    # Calculate the cost as the distance between the gripper's current center and the target position
+    cost = np.linalg.norm(gripper_center - target_position)
+    return cost
+```
+
+### stage 3 path constraints
+```python
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot remains colinear with the center of the body of the red button along the normal of the body of the red button">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the normal vector of the body of the red button
+    covariance_matrix_button = np.cov(pc_button.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Calculate the center of the gripper and the body of the red button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the vector from the button's center to the gripper's center
+    vector_to_gripper = gripper_center - button_center
+    vector_to_gripper = vector_to_gripper / np.linalg.norm(vector_to_gripper)
+
+    # Calculate the cost as the deviation from colinearity with the button's normal
+    cost = np.linalg.norm(vector_to_gripper - button_normal)
+    return cost
+```
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+```python
+def stage_4_subgoal_constraint1():
+    """constraints: <"release">"""
+    release()
+    return
+```
+
+### Object to segment
+```python
+object_to_segment = [
+    "the gripper of the robot",
+    "the body of the red button",
+]
+```

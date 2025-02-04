@@ -1,0 +1,16 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the vertical axis of the table", "the center of the body of the basketball remains aligned with the vertical axis of the table">"""
+    pc = get_point_cloud("the body of the basketball", -1)
+    pc_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc, axis=0)
+    center_initial = np.mean(pc_initial, axis=0)
+
+    # Calculate the horizontal displacement (x, y coordinates)
+    horizontal_displacement = np.linalg.norm(center_current[:2] - center_initial[:2])
+
+    # The basketball should remain aligned with the vertical axis
+    cost = horizontal_displacement
+    return cost
+

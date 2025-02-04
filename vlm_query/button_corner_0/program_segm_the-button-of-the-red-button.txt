@@ -1,0 +1,19 @@
+## mask_indice: 4
+def segment_object(mask):
+    ## find out center of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an empty mask for the output
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Define the center region (assuming the center is a circular region)
+    center_x, center_y = W // 2, H // 2
+    radius = min(H, W) // 4  # Define a radius for the center region
+    
+    # Iterate through the mask and set the center region to True
+    for i in range(H):
+        for j in range(W):
+            if (i - center_y) ** 2 + (j - center_x) ** 2 <= radius ** 2:
+                mask_output[i, j] = True
+    
+    return mask_output

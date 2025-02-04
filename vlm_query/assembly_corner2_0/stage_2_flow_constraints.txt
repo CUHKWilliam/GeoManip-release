@@ -1,0 +1,7 @@
+def stage_2_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    # If the round ring is aligned with the red stick, move to the next stage
+    if stage_2_subgoal_constraint1() < 0.01:
+        return 3  # Move to stage 3
+    return 2  # Stay in stage 2
+

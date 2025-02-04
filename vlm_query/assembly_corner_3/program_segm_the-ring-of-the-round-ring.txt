@@ -1,0 +1,25 @@
+## mask_indice: 0
+def segment_object(mask):
+    """
+    Find the ring of the round ring given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: Mask of the ring in the same shape (H, W).
+    """
+    # If the input mask is already what we want, directly return it
+    if mask.max() == 1 and mask.min() == 0:
+        return mask
+    
+    # Convert mask to uint8 for processing
+    mask = (mask * 255).astype(np.uint8)
+    
+    # Find edges of the mask using Canny edge detection
+    edges = cv2.Canny(mask, 100, 200)
+    
+    # Convert edges back to boolean format
+    mask_output = edges > 0
+    
+    return mask_output

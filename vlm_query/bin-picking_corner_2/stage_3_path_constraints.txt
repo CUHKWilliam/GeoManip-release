@@ -1,0 +1,16 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the body of the white cube", "the body of the blue bin", "the body of the white cube remains aligned with the body of the blue bin during descent">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the blue bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the blue bin
+    white_cube_center = np.mean(pc1, axis=0)
+    blue_bin_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - blue_bin_center[:2])
+
+    # Cost is the deviation from alignment
+    cost = abs(horizontal_distance)
+    return cost
+

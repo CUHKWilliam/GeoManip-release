@@ -1,0 +1,16 @@
+## mask_indice: 2
+def segment_object(mask):
+    ## find out surface of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an array of the same shape as the mask to store the surface
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through each row to find the rightmost True value (surface) and apply edge width
+    for i in range(H):
+        true_indices = np.where(mask[i, :])[0]  # Find column indices where the value is True in this row
+        if true_indices.size > 0:
+            rightmost_index = true_indices[-1]  # Get the rightmost True index
+            mask_output[i, rightmost_index] = True  # Set the surface in the new mask
+    
+    return mask_output

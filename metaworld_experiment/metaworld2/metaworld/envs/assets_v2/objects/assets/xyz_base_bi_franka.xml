@@ -1,0 +1,104 @@
+<mujocoinclude>
+   
+      <camera pos="0 0.5 1.5" name="topview" />
+      <camera name="corner" mode="fixed" pos="-1.1 -0.4 0.6" xyaxes="-1 1 0 -0.2 -0.2 -1"/>
+      <camera name="corner2" fovy="60" mode="fixed" pos="1.3 -0.2 1.1" euler="3.9 2.3 0.6"/>
+      <camera name="corner3" fovy="45" mode="fixed" pos="0.9 0 1.5" euler="3.5 2.7 1"/>
+
+
+        <body name='debug0' pos="-10 0 0">
+            <geom size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug1' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug2' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug3' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug4' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug5' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug6' pos="-10 0 0">
+            <geom  size="0.01 0.01 0.01"  type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug7' pos="-10 0 0" >
+            <geom  size="0.01 0.01 0.01" type="box" rgba="1 1 0 1"/>
+        </body>
+        <body name='debug8' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug9' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug10' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug11' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug12' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug13' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug14' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug15' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug16' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug17' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        <body name='debug18' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+         <body name='debug19' pos="-10 0 0">
+            <geom size="0.02 0.02 0.02"  type="box" rgba="1 1 0 1"/>
+        </body> 
+        
+    <include file="assets/basic_scene.xml"/>
+    <include file="assets/assets.xml"/>
+    <include file="assets/gripper_assets.xml"/>
+    <compiler meshdir=""/>
+
+    <default>
+        <default class='torso'>
+            <geom group='2' contype='0' conaffinity='0' rgba=".95 .99 .92 1"/>
+        </default>/
+    </default>
+
+    <worldbody>
+
+        <body name='torso' childclass='torso'>
+            <geom name='shoulders' type='capsule' size='.09' fromto='.15 0 1.6 -.15 0 1.6'/>
+            <geom name='absL' type='capsule' size='.09' fromto='.15 0 1.6 0.05 0 1.05'/>
+            <geom name='absR' type='capsule' size='.09' fromto='-.15 0 1.6 -.05 0 1.05'/>
+            <geom name='legs' type='capsule' size='.135' fromto='0 0 1.05 0 0 0.05'/>
+
+            <body name='leftarm' pos='0 0 1.6' euler='0 -1.57 1.57'>
+                <include file="assets_franka/chain0.xml"/>
+            </body>
+
+            <body name='rightarm' pos='0 0 1.6' euler='0 1.57 1.57'>
+                <include file="assets_franka/chain1.xml"/>
+            </body>
+
+        </body>
+
+    </worldbody>
+
+    <include file='assets_franka/actuator0.xml'/>
+    <include file='assets_franka/actuator1.xml'/>
+
+</mujocoinclude>

@@ -1,0 +1,5 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"release">"""
+    release()
+    return
+

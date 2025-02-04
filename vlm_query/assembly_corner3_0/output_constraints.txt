@@ -1,0 +1,53 @@
+### Task Decomposition and Flow Control
+
+The task "put the round ring into the red stick by grasping the green handle" involves **5 stages**:
+
+1. Grasp the green handle.
+2. Align the round ring with the red stick.
+3. Insert the round ring into the red stick.
+4. Release the green handle.
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### Stage 1: Grasp the green handle
+- **Sub-goal constraints**:
+  - <"grasp", "the handle of the green object">
+- **Flow constraints**:
+  - <"flow constraint", "go to stage 2 if grasped; retry stage 1 if not grasped">
+
+---
+
+#### Stage 2: Align the round ring with the red stick
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the round ring of the green object", "the center of the top of the red stick of the red object", "the center of the round ring of the green object is directly above the center of the top of the red stick of the red object by 2 centimeters">
+- **Path constraints**:
+  - <"path constraints", "the center of the round ring of the green object", "the center of the top of the red stick of the red object", "the center of the round ring of the green object remains aligned with the center of the top of the red stick of the red object">
+- **Flow constraints**:
+  - <"flow constraint", "go to stage 3 if aligned; retry stage 2 if not aligned">
+
+---
+
+#### Stage 3: Insert the round ring into the red stick
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the inner surface of the round ring of the green object", "the outer surface of the red stick of the red object", "the inner surface of the round ring of the green object is in contact with the outer surface of the red stick of the red object">
+  - <"sub-goal constraints", "the center of the round ring of the green object", "the center of the body of the red stick of the red object", "the center of the round ring of the green object moves downward along the center of the body of the red stick of the red object by 5 centimeters">
+- **Path constraints**:
+  - <"path constraints", "the inner surface of the round ring of the green object", "the outer surface of the red stick of the red object", "the inner surface of the round ring of the green object remains in contact with the outer surface of the red stick of the red object">
+- **Flow constraints**:
+  - <"flow constraint", "go to stage 4 if inserted; retry stage 3 if not inserted">
+
+---
+
+#### Stage 4: Release the green handle
+- **Sub-goal constraints**:
+  - <"release">
+- **Flow constraints**:
+  - <"flow constraint", "end task if released; retry stage 4 if not released">
+
+---
+
+### Summary
+- **Number of stages**: 4
+- **Flow control**: Sequential with retry mechanisms for each stage.

@@ -1,0 +1,15 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball moves vertically upward by 50 cm">"""
+    pc1 = get_point_cloud("the body of the basketball", -2)
+    pc2 = get_point_cloud("the body of the basketball", -1)
+
+    # Calculate the vertical distance (z-axis) between the previous and current positions
+    vertical_distance = pc2.mean(0)[2] - pc1.mean(0)[2]
+
+    # Calculate the horizontal distance (x, y coordinates) to ensure no significant horizontal movement
+    horizontal_distance = np.linalg.norm(pc2.mean(0)[:2] - pc1.mean(0)[:2])
+
+    # The ideal vertical distance is 0.5 meters
+    cost = abs(vertical_distance - 0.5) + horizontal_distance
+    return cost
+

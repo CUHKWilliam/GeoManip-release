@@ -1,0 +1,47 @@
+Examples for geometric constraint generation and flow constraint generation for each stage under the task:
+  - "pouring liquid from teapot until the cup is filled": 
+    - "grasp teapot" stage: (stage 1)
+      - <"grasp", "the handle of the teapot">
+    - "align teapot with cup opening" stage: (stage 2)
+      - <"sub-goal constraints", "the center of the teapot spout of the teapot", "the center of the cup opening of the cup", "the center of the teapot spout of the teapot is directly above the center of the cup opening of the cup around 20 centimeters">
+    - "tilt teapot until the cup is filled with water" stage: (stage 3)
+      - <"sub-goal constraints", "the area of the handle of the teapot", "the normal of the handle of the teapot", "the area of the handle of the teapot rotates around the normal of the handle of the teapot by 30 degress">
+      - <"flow constraints", "the cup is filled with water"> (go to stage 3 if satisfied; goto stage 4 if not satisfied)
+    - "place the teapot on the table near the cup" stage: (stage 4)
+      - <"sub-goal constraints", "the surface of the table", "the center of the cup opening of the cup", "the center of the teapot spout of the teapot is above the surface of the table by 10cm">
+      - <"sub-goal constraints", "the center of the body of the teapot", "the center of the body of the cup", "the distance between the center of the body of the teapot and the center of the body of the cup is around 20cm">
+      - <"sub-goal constraints", "the surface of the table", "the plane of the cup opening of the cup", "the surface of the table is parallel to the plane of the cup opening of the cup">
+
+  - "put red block on top of the blue block":
+    - "grasp red block" stage:
+      - <"grasp", "the body of the red block">
+    - "drop the red block on top of blue block" stage:
+      - <"sub-goal constraints", "the center of the red block", "the center of the blue block", "the center of the red block is directly above the center of the blue block around 20 centimeters">
+    - "release the red block" stage:
+      - <"release">
+  - "cut the cucumber with the kitchen knife":
+    - 'grasp the kitchen knife' stage:
+      - <"grasp", "the handle of the kitchen knife">
+    - "hang the knife above the cucumber"
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the body of the cucumber", "the center of the blade of the kitchen knife is directly above the center of the body of the cucumber by 20 cm">
+      - <"sub-goal constaints", "the axis of the cucumber", "the plane of the blade of the knife", "the axis of the cucumber is perpendicular to the plane of the blade of the knife">
+    - "chop the cucumber" stage:
+      - <"path constaints", "the axis of the cucumer", "the plane of the blade of the knife", "the axis of the cucumber remains perpendicular to the plane of the blade of the knife"> (remain from the previous constraints)
+      - <"path constaints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife remains parallel to the plane of the surface of the table"> (remain from the previous constraints)
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the surface of the table", "the area of the blade of the kitchen knife is above the area of the surface of the table by 1 cm">
+    - "release the cucumber" stage:
+      - <"release">
+  - "open the drawer":
+    - "grasp the drawer handle" stage:
+      - <"grasp", "the handle of the drawer">
+    - "pull the drawer" stage:
+      - <"sub-goal constraints", "the center of the handle of the drawer", "the center of the body the drawer", "the center of the handle of the drawer move against the center of the body of the drawer by around 30 cm">
+    - "release the drawer" stage:
+      - <"release">
+  - "press the area" # grasp nothing for pressing, only close gripper
+    - "close the gripper" stage:
+      - <"grasp", "">
+    - "move to ready-to-press position" stage:
+    <"sub-goal constraints", "the center of the gripper of the robot", "the area", "the center of the gripper of the robot colinear with the normal the area by 10 cm">
+    - "pressing" stage:
+      - <"sub-goal constaints", "the center of the gripper of the robot", "the center of the area", "the center of the gripper of the robot moves toward the center of the area by 100 cm">

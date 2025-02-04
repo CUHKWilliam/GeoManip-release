@@ -1,0 +1,19 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the shelf surface of the shelf", "the center of the body of the blue cube is directly above the center of the shelf surface of the shelf by 10 centimeters">"""
+    pc1 = get_point_cloud("the body of the blue cube", -1)
+    pc2 = get_point_cloud("the shelf surface of the shelf", -1)
+
+    # Compute the center of mass (mean position) for the blue cube and the shelf surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    shelf_surface_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - shelf_surface_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = blue_cube_center[2] - shelf_surface_center[2] - 0.1  # 10 cm = 0.1 m
+
+    # Cost is the sum of deviations from the ideal position
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+

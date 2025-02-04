@@ -1,0 +1,11 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop opening of the hoop", "the center of the body of the basketball remains aligned with the center of the hoop opening of the hoop">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the basketball and the hoop
+    horizontal_distance = np.linalg.norm(pc1.mean(0)[:2] - pc2.mean(0)[:2])
+
+    cost = horizontal_distance
+    return cost
+

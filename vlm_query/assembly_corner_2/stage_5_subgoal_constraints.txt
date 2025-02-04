@@ -1,0 +1,19 @@
+def stage_5_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the red stick of the red stick", "the center of the gripper of the robot moves away from the center of the red stick of the red stick by 10 centimeters">"""
+    pc1 = get_point_cloud("the gripper of the robot", -1)
+    pc2 = get_point_cloud("the red stick of the red stick", -1)
+
+    # Compute the center of the gripper and the red stick
+    center_gripper = np.mean(pc1, axis=0)
+    center_stick = np.mean(pc2, axis=0)
+
+    # Compute the vector from the red stick to the gripper
+    direction = (center_gripper - center_stick) / np.linalg.norm(center_gripper - center_stick)
+
+    # Target position for the gripper
+    target_position = center_stick + direction * 0.1
+
+    # Compute the cost as the distance between the current gripper position and the target position
+    cost = np.linalg.norm(center_gripper - target_position)
+    return cost
+

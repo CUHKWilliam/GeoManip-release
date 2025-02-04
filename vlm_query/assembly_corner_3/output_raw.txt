@@ -1,0 +1,64 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the handle of the green handle"> """
+    return grasp("the handle of the green handle")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the ring of the round ring", "the center of the stick of the red stick", "the center of the ring of the round ring is directly above the center of the stick of the red stick by 5 cm"> """
+    pc1 = get_point_cloud("the ring of the round ring", -1)
+    pc2 = get_point_cloud("the stick of the red stick", -1)
+
+    # Compute the mean position of the ring and the stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = ring_center[2] - stick_center[2] - 0.05  # 5 cm above
+
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the ring of the round ring", "the center of the stick of the red stick", "the center of the ring of the round ring remains above the center of the stick of the red stick"> """
+    pc1 = get_point_cloud("the ring of the round ring", -1)
+    pc2 = get_point_cloud("the stick of the red stick", -1)
+
+    # Compute the mean position of the ring and the stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    # Ensure the ring remains above the stick
+    vertical_distance = ring_center[2] - stick_center[2]
+
+    # Penalize if the ring is not above the stick
+    cost = horizontal_distance + (0 if vertical_distance > 0 else abs(vertical_distance) + 1000)
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### <stage constraints splitter> ###
+### stage 3 path constraints
+# No path constraints for releasing
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the handle of the green handle",
+    "the ring of the round ring",
+    "the stick of the red stick"
+]

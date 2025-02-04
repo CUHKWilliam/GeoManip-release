@@ -1,0 +1,168 @@
+```python
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the handle of the safe"> """
+    return grasp("the area of the handle of the safe")
+
+### <stage constraints splitter> ###
+### stage 2 target constraints (rotate the handle)
+def stage_2_target_constraint1():
+    """constraints: <"targets constraints", "the axis of the handle of the safe", "the axis of the hinge of the handle of the safe", "the axis of the handle of the safe rotates around the axis of the hinge of the handle of the safe by 90 degrees">"""
+    mask1 = segment("the axis of the handle of the safe", -1)
+    mask2 = segment("the axis of the hinge of the handle of the safe", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the axis of the handle of the safe (pc1)
+    covariance_matrix_handle = np.cov(pc1.T)
+    eigenvalues_handle, eigenvectors_handle = np.linalg.eig(covariance_matrix_handle)
+    handle_axis = eigenvectors_handle[:, np.argmax(eigenvalues_handle)]
+
+    # Compute the axis of the hinge of the handle of the safe (pc2)
+    covariance_matrix_hinge = np.cov(pc2.T)
+    eigenvalues_hinge, eigenvectors_hinge = np.linalg.eig(covariance_matrix_hinge)
+    hinge_axis = eigenvectors_hinge[:, np.argmax(eigenvalues_hinge)]
+
+    # Normalize both vectors
+    handle_axis = handle_axis / np.linalg.norm(handle_axis)
+    hinge_axis = hinge_axis / np.linalg.norm(hinge_axis)
+
+    # Compute the angle between the handle axis and hinge axis
+    dot_product = np.dot(handle_axis, hinge_axis)
+    angle = np.arccos(dot_product)
+    
+    # The target angle is 90 degrees (π/2 radians)
+    target_angle = np.pi / 2
+    cost = abs(angle - target_angle) * 5.0  # Multiply by 5 for angle constraints
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 2 path constraints (rotate the handle)
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the handle of the safe", "the distance between the center of the gripper of the robot and the center of the handle of the safe remains constant">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask2 = segment("the center of the handle of the safe", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the center of the gripper and the center of the handle
+    gripper_center = np.mean(pc1, axis=0)
+    handle_center = np.mean(pc2, axis=0)
+
+    # Compute the distance between the gripper and the handle
+    distance = np.linalg.norm(gripper_center - handle_center)
+
+    # The cost is based on how much the distance deviates from the initial distance
+    initial_distance = np.linalg.norm(gripper_center - handle_center)  # Assuming initial distance is recorded
+    cost = abs(distance - initial_distance)
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 target constraints (pull the door)
+def stage_3_target_constraint1():
+    """constraints: <"targets constraints", "the plane of the surface of the door of the safe", "the axis of the hinge of the door of the safe", "the plane of the surface of the door of the safe rotates around the axis of the hinge of the door of the safe by 90 degrees">"""
+    mask1 = segment("the plane of the surface of the door of the safe", -1)
+    mask1_initial = segment("the plane of the surface of the door of the safe", 0)
+    mask2 = segment("the axis of the hinge of the door of the safe", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1_initial = mask1_initial
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1_initial = mask_to_pc(mask1_initial)
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Step 1: center pc1_initial at the center of pc2
+    pc2_mean = pc2.mean(0)
+    pc2 -= pc2_mean
+    pc1_initial -= pc2_mean
+
+    # Step 2: Normalize the axis of the hinge of the door (from pc2)
+    covariance_matrix_door = np.cov(pc2.T)
+    eigenvalues_door, eigenvectors_door = np.linalg.eig(covariance_matrix_door)
+    door_axis = eigenvectors_door[:, np.argmax(eigenvalues_door)]
+    door_axis = door_axis / np.linalg.norm(door_axis)  # Normalize the axis vector
+
+    # Step 3: Convert the angle from degrees to radians
+    angle_radians = np.radians(90)  # 90 degrees
+
+    # Step 4: Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -door_axis[2], door_axis[1]],
+                  [door_axis[2], 0, -door_axis[0]],
+                  [-door_axis[1], door_axis[0], 0]])  # Skew-symmetric matrix for door_axis
+    I = np.eye(3)  # Identity matrix
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Step 5: Rotate each point in pc1
+    rotated_pc1 = np.dot(pc1_initial, rotation_matrix.T)  # Apply rotation matrix to each point
+
+    # Step 6: Restore the position of rotated_pc1 and pc2
+    rotated_pc1 += pc2_mean
+    pc2 += pc2_mean
+
+    # Step 7: compute the cost of how pc1 aligns with rotated_pc1.
+    distances = np.linalg.norm(pc1 - rotated_pc1, axis=1)
+    cost = np.sum(distances)
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 path constraints (pull the door)
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the handle of the safe", "the distance between the center of the gripper of the robot and the center of the handle of the safe remains constant">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask2 = segment("the center of the handle of the safe", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the center of the gripper and the center of the handle
+    gripper_center = np.mean(pc1, axis=0)
+    handle_center = np.mean(pc2, axis=0)
+
+    # Compute the distance between the gripper and the handle
+    distance = np.linalg.norm(gripper_center - handle_center)
+
+    # The cost is based on how much the distance deviates from the initial distance
+    initial_distance = np.linalg.norm(gripper_center - handle_center)  # Assuming initial distance is recorded
+    cost = abs(distance - initial_distance)
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints (release)
+def stage_4_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the area of the handle of the safe",
+    "the axis of the handle of the safe",
+    "the axis of the hinge of the handle of the safe",
+    "the center of the gripper of the robot",
+    "the center of the handle of the safe",
+    "the plane of the surface of the door of the safe",
+    "the axis of the hinge of the door of the safe"
+]
+```

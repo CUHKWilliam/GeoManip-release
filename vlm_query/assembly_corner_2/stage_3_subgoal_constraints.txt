@@ -1,0 +1,13 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the bottom of the round ring of the round ring", "the top of the red stick of the red stick", "the bottom of the round ring of the round ring is in contact with the top of the red stick of the red stick">"""
+    pc1 = get_point_cloud("the bottom of the round ring of the round ring", -1)
+    pc2 = get_point_cloud("the top of the red stick of the red stick", -1)
+
+    # Compute the center of the bottom of the round ring and the top of the red stick
+    bottom_ring = np.mean(pc1, axis=0)
+    top_stick = np.mean(pc2, axis=0)
+
+    # Compute the distance between the two points
+    cost = np.linalg.norm(bottom_ring - top_stick)
+    return cost
+

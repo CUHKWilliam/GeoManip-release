@@ -1,0 +1,16 @@
+## mask_indice: 3
+def segment_object(mask):
+    ## find out vertical section of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an empty mask for the output
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through each column to find the middle vertical section
+    middle_start = W // 3  # Start from 1/3rd of the width
+    middle_end = 2 * W // 3  # End at 2/3rd of the width
+    
+    # Copy the middle vertical section to the output mask
+    mask_output[:, middle_start:middle_end] = mask[:, middle_start:middle_end]
+    
+    return mask_output

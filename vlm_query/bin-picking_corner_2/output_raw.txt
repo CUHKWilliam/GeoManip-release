@@ -1,0 +1,116 @@
+```python
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the body of the white cube"> """
+    return grasp("the body of the white cube")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the white cube", "the center of the body of the blue bin", "the center of the body of the white cube is directly above the center of the body of the blue bin by 10 centimeters">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the blue bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the blue bin
+    white_cube_center = np.mean(pc1, axis=0)
+    blue_bin_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - blue_bin_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = white_cube_center[2] - blue_bin_center[2] - 0.1  # 10 cm above
+
+    # Cost is the sum of deviations from the desired position
+    cost = abs(horizontal_distance) + abs(vertical_distance)
+    return cost
+
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the body of the white cube", "the body of the red bin", "the body of the white cube remains above the body of the red bin until it is above the blue bin">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the red bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the red bin
+    white_cube_center = np.mean(pc1, axis=0)
+    red_bin_center = np.mean(pc2, axis=0)
+
+    # Ensure the white cube remains above the red bin
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - red_bin_center[:2])
+    vertical_distance = white_cube_center[2] - red_bin_center[2]
+
+    # Cost is the deviation from the white cube being above the red bin
+    cost = abs(horizontal_distance) if vertical_distance > 0 else 1000  # Large penalty if not above
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the white cube", "the center of the body of the blue bin", "the center of the body of the white cube is inside the body of the blue bin">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the blue bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the blue bin
+    white_cube_center = np.mean(pc1, axis=0)
+    blue_bin_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - blue_bin_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = blue_bin_center[2] - white_cube_center[2]  # Cube should be inside the bin
+
+    # Cost is the sum of deviations from the desired position
+    cost = abs(horizontal_distance) + abs(vertical_distance)
+    return cost
+
+### stage 3 path constraints
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the body of the white cube", "the body of the blue bin", "the body of the white cube remains aligned with the body of the blue bin during descent">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the blue bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the blue bin
+    white_cube_center = np.mean(pc1, axis=0)
+    blue_bin_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - blue_bin_center[:2])
+
+    # Cost is the deviation from alignment
+    cost = abs(horizontal_distance)
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+def stage_4_subgoal_constraint1():
+    """constraints: <"release"> """
+    return release()
+
+### <stage constraints splitter> ###
+### stage 2 flow constraints
+def stage_2_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 3 if position is achieved; retry stage 2 if not achieved">"""
+    cost = stage_2_subgoal_constraint1()
+    if cost < 0.01:  # Threshold for position achieved
+        return 3
+    else:
+        return 2
+
+### stage 3 flow constraints
+def stage_3_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 4 if cube is inside the bin; retry stage 3 if not inside">"""
+    cost = stage_3_subgoal_constraint1()
+    if cost < 0.01:  # Threshold for cube inside the bin
+        return 4
+    else:
+        return 3
+
+### <stage constraints splitter> ###
+object_to_segment = [
+    "the body of the white cube",
+    "the body of the blue bin",
+    "the body of the red bin"
+]
+```

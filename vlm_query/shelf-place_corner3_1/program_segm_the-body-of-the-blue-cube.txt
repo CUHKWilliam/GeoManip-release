@@ -1,0 +1,14 @@
+## mask_indice: 1
+def segment_object(mask):
+    """
+    Function to find the body of the blue cube given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: The mask representing the body of the blue cube in shape (H, W).
+    """
+    # Directly return the input mask as it already represents the body of the blue cube
+    mask_output = mask.copy()
+    return mask_output

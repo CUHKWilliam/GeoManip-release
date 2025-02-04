@@ -1,0 +1,184 @@
+Below is the Python implementation of the constraints and flow control for the task "put the basketball onto the red hoop."
+
+---
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping)
+```python
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the body of the basketball">"""
+    return grasp("the body of the basketball")
+```
+
+---
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints (lift the basketball vertically)
+```python
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball is above its initial position by 20 centimeters">"""
+    pc = get_point_cloud("the body of the basketball", -1)
+    pc_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc, axis=0)
+    center_initial = np.mean(pc_initial, axis=0)
+
+    # Calculate the vertical displacement
+    vertical_displacement = center_current[2] - center_initial[2]
+
+    # The target vertical displacement is 0.2 meters (20 cm)
+    cost = abs(vertical_displacement - 0.2)
+    return cost
+```
+
+```python
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the vertical axis of the table", "the center of the body of the basketball remains aligned with the vertical axis of the table">"""
+    pc = get_point_cloud("the body of the basketball", -1)
+    pc_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc, axis=0)
+    center_initial = np.mean(pc_initial, axis=0)
+
+    # Calculate the horizontal displacement (x, y coordinates)
+    horizontal_displacement = np.linalg.norm(center_current[:2] - center_initial[:2])
+
+    # The basketball should remain aligned with the vertical axis
+    cost = horizontal_displacement
+    return cost
+```
+
+---
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (move the basketball over the red hoop)
+```python
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball is directly above the center of the red hoop by 20 centimeters">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_hoop = get_point_cloud("the red hoop", -1)
+
+    # Compute the center of the basketball and the red hoop
+    center_basketball = np.mean(pc_basketball, axis=0)
+    center_hoop = np.mean(pc_hoop, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates)
+    horizontal_distance = np.linalg.norm(center_basketball[:2] - center_hoop[:2])
+
+    # Calculate the vertical displacement
+    vertical_displacement = center_basketball[2] - center_hoop[2]
+
+    # The target vertical displacement is 0.2 meters (20 cm)
+    cost = horizontal_distance + abs(vertical_displacement - 0.2)
+    return cost
+```
+
+```python
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball remains at a constant height of 20 centimeters above the table while moving horizontally">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_basketball_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc_basketball, axis=0)
+    center_initial = np.mean(pc_basketball_initial, axis=0)
+
+    # Calculate the vertical displacement
+    vertical_displacement = abs(center_current[2] - center_initial[2])
+
+    # The basketball should remain at a constant height of 0.2 meters
+    cost = abs(vertical_displacement - 0.2)
+    return cost
+```
+
+---
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints (move the basketball down onto the red hoop)
+```python
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball is inside the red hoop">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_hoop = get_point_cloud("the red hoop", -1)
+
+    # Compute the center of the basketball and the red hoop
+    center_basketball = np.mean(pc_basketball, axis=0)
+    center_hoop = np.mean(pc_hoop, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates)
+    horizontal_distance = np.linalg.norm(center_basketball[:2] - center_hoop[:2])
+
+    # Calculate the vertical displacement
+    vertical_displacement = abs(center_basketball[2] - center_hoop[2])
+
+    # The basketball should be inside the hoop (minimal horizontal distance and vertical alignment)
+    cost = horizontal_distance + vertical_displacement
+    return cost
+```
+
+```python
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the red hoop", "the center of the body of the basketball remains aligned with the center of the red hoop while moving vertically downward">"""
+    pc_basketball = get_point_cloud("the body of the basketball", -1)
+    pc_basketball_initial = get_point_cloud("the body of the basketball", -2)
+    pc_hoop = get_point_cloud("the red hoop", -1)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc_basketball, axis=0)
+    center_initial = np.mean(pc_basketball_initial, axis=0)
+    center_hoop = np.mean(pc_hoop, axis=0)
+
+    # Calculate the horizontal displacement
+    horizontal_displacement = np.linalg.norm(center_current[:2] - center_hoop[:2])
+
+    # The basketball should remain aligned with the hoop
+    cost = horizontal_displacement
+    return cost
+```
+
+---
+
+### <stage constraints splitter> ###
+### stage 5 sub-goal constraints (release the basketball)
+```python
+def stage_5_subgoal_constraint1():
+    """constraints: <"release">"""
+    return release()
+```
+
+---
+
+### <stage constraints splitter> ###
+### Flow constraints
+```python
+def stage_2_flow_constraints():
+    """constraints: <"flow constraints", "the basketball is lifted to the desired height">"""
+    pc = get_point_cloud("the body of the basketball", -1)
+    pc_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc, axis=0)
+    center_initial = np.mean(pc_initial, axis=0)
+
+    # Calculate the vertical displacement
+    vertical_displacement = center_current[2] - center_initial[2]
+
+    # If the basketball is lifted to the desired height, go to the next stage
+    if abs(vertical_displacement - 0.2) < 0.01:
+        return 3
+    return 2
+```
+
+---
+
+### List of `geometry` of `the object part` of `the object`
+```python
+object_to_segment = [
+    "the body of the basketball",
+    "the center of the body of the basketball",
+    "the center of the red hoop",
+    "the red hoop"
+]
+```

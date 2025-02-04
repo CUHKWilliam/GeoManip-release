@@ -1,0 +1,57 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the body of the blue cube"> """
+    return grasp("the body of the blue cube")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the shelf surface of the shelf", "the center of the body of the blue cube is directly above the center of the shelf surface of the shelf by 10 centimeters">"""
+    pc1 = get_point_cloud("the body of the blue cube", -1)
+    pc2 = get_point_cloud("the shelf surface of the shelf", -1)
+
+    # Compute the center of mass (mean position) for the blue cube and the shelf surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    shelf_surface_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - shelf_surface_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = blue_cube_center[2] - shelf_surface_center[2] - 0.1  # 10 cm = 0.1 m
+
+    # Cost is the sum of deviations from the ideal position
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the body of the blue cube", "the shelf surface of the shelf", "the body of the blue cube remains above the shelf surface of the shelf">"""
+    pc1 = get_point_cloud("the body of the blue cube", -1)
+    pc2 = get_point_cloud("the shelf surface of the shelf", -1)
+
+    # Compute the center of mass (mean position) for the blue cube and the shelf surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    shelf_surface_center = np.mean(pc2, axis=0)
+
+    # Ensure the blue cube remains above the shelf surface
+    vertical_distance = blue_cube_center[2] - shelf_surface_center[2]
+    cost = 0 if vertical_distance > 0 else abs(vertical_distance) + 1000  # Large penalty if not above
+    return cost
+
+### <stage constraints splitter> ###
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the body of the blue cube",
+    "the shelf surface of the shelf"
+]

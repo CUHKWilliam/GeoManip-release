@@ -1,0 +1,128 @@
+```python
+import numpy as np
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the red faucet"> """
+    return grasp("the area of the body of the red faucet")
+
+
+### <stage constraints splitter> ###
+### stage 2 target constraints (rotating the faucet)
+def stage_2_target_constraint1():
+    """constraints: <"targets constraints", "the axis of the body of the red faucet", "the axis of the body of the red faucet at its initial timestamp", "the axis of the body of the red faucet rotates around the axis of the body of the red faucet at its initial timestamp by at least 100 degrees">"""
+    mask1_current = segment("the axis of the body of the red faucet", -1)  # Current axis
+    mask1_initial = segment("the axis of the body of the red faucet", -2)  # Initial axis
+
+    if mask1_current.shape[-1] == 3:
+        pc1_current = mask1_current
+        pc1_initial = mask1_initial
+    else:
+        pc1_current = mask_to_pc(mask1_current)
+        pc1_initial = mask_to_pc(mask1_initial)
+
+    # Calculate the axis of the red faucet at the current and initial timestamps
+    covariance_matrix_current = np.cov(pc1_current.T)
+    eigenvalues_current, eigenvectors_current = np.linalg.eig(covariance_matrix_current)
+    faucet_axis_current = eigenvectors_current[:, np.argmax(eigenvalues_current)]
+
+    covariance_matrix_initial = np.cov(pc1_initial.T)
+    eigenvalues_initial, eigenvectors_initial = np.linalg.eig(covariance_matrix_initial)
+    faucet_axis_initial = eigenvectors_initial[:, np.argmax(eigenvalues_initial)]
+
+    # Normalize both axes
+    faucet_axis_current = faucet_axis_current / np.linalg.norm(faucet_axis_current)
+    faucet_axis_initial = faucet_axis_initial / np.linalg.norm(faucet_axis_initial)
+
+    # Compute the angle between the current and initial axes
+    dot_product = np.dot(faucet_axis_current, faucet_axis_initial)
+    angle_radians = np.arccos(np.clip(dot_product, -1.0, 1.0))  # Clip to avoid numerical errors
+    angle_degrees = np.degrees(angle_radians)
+
+    # The cost is based on how far the rotation is from 100 degrees
+    cost = max(0, 100 - angle_degrees)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 2 path constraints (maintaining distance during rotation)
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red faucet", "the center of the gripper of the robot remains at the same distance from the center of the body of the red faucet">"""
+    mask1 = segment("the center of the gripper of the robot", -1)  # Current gripper center
+    mask2 = segment("the center of the body of the red faucet", -1)  # Current faucet center
+
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the center of the gripper and the center of the faucet
+    gripper_center = np.mean(pc1, axis=0)
+    faucet_center = np.mean(pc2, axis=0)
+
+    # Calculate the distance between the gripper and the faucet
+    distance = np.linalg.norm(gripper_center - faucet_center)
+
+    # The cost is based on how much the distance deviates from the initial distance
+    initial_mask1 = segment("the center of the gripper of the robot", -2)  # Initial gripper center
+    initial_mask2 = segment("the center of the body of the red faucet", -2)  # Initial faucet center
+
+    if initial_mask1.shape[-1] == 3:
+        initial_pc1 = initial_mask1
+        initial_pc2 = initial_mask2
+    else:
+        initial_pc1 = mask_to_pc(initial_mask1)
+        initial_pc2 = mask_to_pc(initial_mask2)
+
+    initial_gripper_center = np.mean(initial_pc1, axis=0)
+    initial_faucet_center = np.mean(initial_pc2, axis=0)
+
+    initial_distance = np.linalg.norm(initial_gripper_center - initial_faucet_center)
+
+    # The cost is the absolute difference between the current and initial distances
+    cost = abs(distance - initial_distance)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (releasing)
+def stage_3_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+
+### Enumerate all the "`geometry` of `the object part` of `the object`" in all the constraints and all the grasp stages
+object_to_segment = [
+    "the area of the body of the red faucet",
+    "the axis of the body of the red faucet",
+    "the center of the body of the red faucet",
+    "the center of the gripper of the robot"
+]
+```
+
+
+### Explanation:
+1. **Stage 1 (Grasping)**:
+   - The robot grasps the red faucet by its body.
+   - Function: `stage_1_subgoal_constraint1()`
+
+2. **Stage 2 (Rotating the Faucet)**:
+   - **Target Constraint**: The red faucet must rotate around its axis by at least 100 degrees.
+   - **Path Constraint**: The center of the gripper must remain at the same distance from the center of the faucet during the rotation.
+   - Functions: `stage_2_target_constraint1()` and `stage_2_path_constraint1()`
+
+3. **Stage 3 (Releasing)**:
+   - The robot releases the red faucet.
+   - Function: `stage_3_subgoal_constraint1()`
+
+### List of Geometries to Track:
+- "the area of the body of the red faucet"
+- "the axis of the body of the red faucet"
+- "the center of the body of the red faucet"
+- "the center of the gripper of the robot"

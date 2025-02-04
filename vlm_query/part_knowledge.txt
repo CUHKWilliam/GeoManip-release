@@ -1,0 +1,29 @@
+- To find hinge / axis, output the image of its door, and see which side to segment.For a rotating object part, the hinge / axis and the handle are of the opposite position.  For example, for finding the hinge of the microwave, output the image of microwave door first. And if the handle is on the left of the the door, the hinge should locate at the right edge of its door. 
+- For a sliding body, the slider should be parallel to the edge of the frame.
+- To find out the body / the area of an object part or find out an object part, just return the input mask.
+- If the object is in black on the segmentation image, set the mask_output to 1 where input mask is False.
+- To find the cup / bottle / bowl opening, find its edge, and remember to shift the edge down a little bit
+- sample code to find the complete edge. You need to adjust the code to choose the left / right / top / bottom edge accordingly. For example, to fine the left edge, find the leftmost True value by iterating over each row to find the leftmost True value
+    
+def find_edges(mask):
+     """
+    Find the edges of a binary mask using Canny edge detection.
+
+    Parameters:
+        mask (np.ndarray): Binary image (mask) with 1s representing the object and 0s representing the background.
+        
+    Returns:
+        np.ndarray: Edge mask with 255 at the edges of the object and 0s elsewhere.
+    """
+    # Convert mask to uint8 if not already
+    mask = (mask * 255).astype(np.uint8) if mask.max() == 1 else mask
+    
+    # Apply Canny edge detection
+    edges = cv2.Canny(mask, 100, 200)
+
+    return edges
+
+- If the mask is already what we want, like the handle, the area, directly return the mask ! 
+def xxx(mask):
+    mask_output = mask.copy()
+    return mask_output

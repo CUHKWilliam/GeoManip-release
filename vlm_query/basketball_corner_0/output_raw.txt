@@ -1,0 +1,105 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the body of the basketball"> """
+    return grasp("the body of the basketball")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball moves vertically upward by 50 cm">"""
+    pc1 = get_point_cloud("the body of the basketball", -2)
+    pc2 = get_point_cloud("the body of the basketball", -1)
+
+    # Calculate the vertical distance (z-axis) between the previous and current positions
+    vertical_distance = pc2.mean(0)[2] - pc1.mean(0)[2]
+
+    # Calculate the horizontal distance (x, y coordinates) to ensure no significant horizontal movement
+    horizontal_distance = np.linalg.norm(pc2.mean(0)[:2] - pc1.mean(0)[:2])
+
+    # The ideal vertical distance is 0.5 meters
+    cost = abs(vertical_distance - 0.5) + horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop opening of the red hoop", "the center of the body of the basketball is directly above the center of the hoop opening of the hoop by 10 cm">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(pc1.mean(0)[:2] - pc2.mean(0)[:2])
+
+    # Calculate the vertical distance (z-axis) between the basketball and the red hoop
+    vertical_distance = pc1.mean(0)[2] - pc2.mean(0)[2] - 0.1
+    cost = abs(horizontal_distance) + abs(vertical_distance)
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop opening of the hoop", "the center of the body of the basketball is at the same height as the center of the hoop opening of the hoop">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the vertical distance (z-axis) between the basketball and the red hoop
+    vertical_distance = abs(pc1.mean(0)[2] - pc2.mean(0)[2])
+
+    # Calculate the horizontal distance (x, y coordinates) to ensure alignment
+    horizontal_distance = np.linalg.norm(pc1.mean(0)[:2] - pc2.mean(0)[:2])
+
+    cost = vertical_distance + horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 5 sub-goal constraints
+def stage_5_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball remains directly above its previous position">"""
+    pc1 = get_point_cloud("the body of the basketball", -2)
+    pc2 = get_point_cloud("the body of the basketball", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the previous and current positions
+    horizontal_distance = np.linalg.norm(pc2.mean(0)[:2] - pc1.mean(0)[:2])
+
+    cost = horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 path constraints
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop opening of the hoop", "the center of the body of the basketball remains at a constant height above the center of the hoop opening of the hoop">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the vertical distance (z-axis) between the basketball and the hoop
+    vertical_distance = abs(pc1.mean(0)[2] - pc2.mean(0)[2] - 0.1)
+
+    cost = vertical_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 path constraints
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop opening of the hoop", "the center of the body of the basketball remains aligned with the center of the hoop opening of the hoop">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the horizontal distance (x, y coordinates) between the basketball and the hoop
+    horizontal_distance = np.linalg.norm(pc1.mean(0)[:2] - pc2.mean(0)[:2])
+
+    cost = horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+object_to_segment = [
+    "the body of the basketball",
+    "the hoop opening of the red hoop",
+]

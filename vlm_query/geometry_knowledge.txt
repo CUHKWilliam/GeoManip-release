@@ -1,0 +1,135 @@
+Here are some geometry-related knowledge:
+THE EXAMPLES ARE ONLY FOR YOUR REFERENCE. YOU NEED TO ADAPT TO THE CODE FLEXIBLY AND CREATIVELY ACCORDING TO DIFFERENT SCENARIOS !!!!!
+
+# Chapter 1: normal, axis, heading direction, binormal:
+- Notice: The largest axis component of the normal / axis / heading direction should always be positive !
+- To find the heading direction is the same of finding the axis
+- Example:
+    """
+    Finds the normal (normal vector) of a plate given its point cloud.
+
+    Args:
+        pc: numpy array of shape (N, 3), point cloud of the plate.
+
+    Returns:
+        plate_normal: A normalized vector representing the normal vector of the plate.
+    """
+    # Compute the covariance matrix of the point cloud
+    covariance_matrix = np.cov(pc.T)
+    
+    # Perform eigen decomposition to get eigenvalues and eigenvectors
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+    
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector to the plate's surface
+    plate_normal = eigenvectors[:, np.argmin(eigenvalues)]
+    if plate_normal[np.argmax(plate_normal)] > 0:
+        plate_normal = -plate_normal
+
+    # Normalize the normal vector
+    plate_normal = plate_normal / np.linalg.norm(plate_normal, axis=-1)
+    
+    return plate_normal
+
+- Next example:
+    """
+    Finds the axis of a cylinder given its point cloud.
+
+    Args:
+        pc: numpy array of shape (N, 3), point cloud of the cylinder.
+
+    Returns:
+        cylinder_axis: A normalized vector representing the axis of the cylinder.
+    """
+    # Compute the covariance matrix of the point cloud
+    covariance_matrix = np.cov(pc.T)
+    
+    # Perform eigen decomposition to get eigenvalues and eigenvectors
+    eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
+    
+    # The eigenvector corresponding to the largest eigenvalue represents the axis of the cylinder
+    cylinder_axis = eigenvectors[:, np.argmax(eigenvalues)]
+    if cylinder_axis[np.argmax(cylinder_axis)] < 0:
+        cylinder_axis = -cylinder_axis
+    
+    # Normalize the axis vector
+    cylinder_axis = cylinder_axis / np.linalg.norm(cylinder_axis, axis=-1)
+    
+    return cylinder_axis
+- To find out the heading direction of long-shaped object, find the max PCA component.
+- To find out the normal of a surface, find the min PCA component.
+- To find out the axis of an object, there are two cases. 
+    - For long-shaped object like bolt, carrot, etc., its the max PCA component
+    - For fat-shaped object like bowl, nut, etc., its the min PCA component
+
+- A axis / heading direction / normal that is perpendicular to a plane / surface is parallel to the normal. 
+- A binormal is the vector that is both perpendicular to the axis / heading direction and the normal 
+
+
+# Chapter 2: relative position between two points
+- Example 1:
+    """
+    Measures the cost that point 2 is directly below point 1.
+    
+    Args:
+        pc1: numpy array of shape (N, 3), point cloud of point 1.
+        pc2: numpy array of shape (M, 3), point cloud of point 2.
+
+    Returns:
+        cost: a non-negative float representing the extent to which point 2 is directly below point 1.
+              The lower the cost, the more point 2 is directly below point 1.
+    """
+    # Compute the center of mass (mean position) for point 1 and point 2
+    point1_center = np.mean(pc1, axis=0)
+    point2_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(point1_center[:2] - point2_center[:2])
+    
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = point1_center[2] - point2_center[2]
+    
+    # If point 2 is not below point 1, add a large penalty to the cost
+    if vertical_distance < 0:
+        cost = abs(vertical_distance) + horizontal_distance + 1000  # Large penalty for incorrect vertical position
+    else:
+        cost = horizontal_distance
+    
+    return cost
+
+- Next example:
+    """
+    Measures the cost that point 2 is directly to the left of point 1 by 10 cm.
+    
+    Args:
+        pc1: numpy array of shape (N, 3), point cloud of point 1.
+        pc2: numpy array of shape (M, 3), point cloud of point 2.
+
+    Returns:
+        cost: a non-negative float representing the extent to which point 2 is directly to the left of point 1 by 10 cm.
+              The lower the cost, the closer point 2 is to being exactly 10 cm to the left of point 1.
+    """
+    # Compute the center of mass (mean position) for point 1 and point 2
+    point1_center = np.mean(pc1, axis=0)
+    point2_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x-axis) between point 1 and point 2
+    x_distance = point2_center[0] - point1_center[0]
+    
+    # Calculate the y and z distances (vertical and depth positions)
+    y_distance = abs(point2_center[1] - point1_center[1])
+    z_distance = abs(point2_center[2] - point1_center[2])
+    
+    # The ideal x distance should be -0.10 meters (to the left by 10 cm)
+    cost = abs(x_distance + 0.10) + y_distance + z_distance  # Sum all deviations from ideal positioning
+    return cost
+    
+# Chapter 3: Relationship between points and vector
+- Colinear: a object A's axis / normal / heading direction ... is colinear with a point B if the following 3 points are on the same line:
+    1. The object A's center.
+    2. The object A's center + A' axis / normal / heading direction.
+    3. The point B
+- points A move towards points B by distance:
+    previous point A = get_point_cloud(A, -2)
+    current point A = get_point_cloud(A, -1)
+    target position of point A = points B + normalized(vector of previous point A to B) * distance
+    cost = np.linalg.norm(target position of point A - current position of point A)

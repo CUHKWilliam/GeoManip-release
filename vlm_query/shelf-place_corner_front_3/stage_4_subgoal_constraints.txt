@@ -1,0 +1,27 @@
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the middle stack of the shelf", "the center of the body of the blue cube is directly above the center of the middle stack of the shelf by around 5 centimeters">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the center of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube and the middle stack of the shelf
+    blue_cube_center = np.mean(pc1, axis=0)
+    middle_stack_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - middle_stack_center[:2])
+    
+    # Calculate the vertical distance (z-axis) between the centers
+    vertical_distance = blue_cube_center[2] - middle_stack_center[2]
+    
+    # The target is to place the blue cube 5 cm above the middle stack
+    cost = abs(vertical_distance - 0.05) + horizontal_distance
+    
+    return cost
+

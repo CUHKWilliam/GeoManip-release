@@ -1,0 +1,17 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the body of the white cube", "the body of the red bin", "the body of the white cube remains above the body of the red bin until it is above the blue bin">"""
+    pc1 = get_point_cloud("the body of the white cube", -1)
+    pc2 = get_point_cloud("the body of the red bin", -1)
+
+    # Compute the center of mass (mean position) for the white cube and the red bin
+    white_cube_center = np.mean(pc1, axis=0)
+    red_bin_center = np.mean(pc2, axis=0)
+
+    # Ensure the white cube remains above the red bin
+    horizontal_distance = np.linalg.norm(white_cube_center[:2] - red_bin_center[:2])
+    vertical_distance = white_cube_center[2] - red_bin_center[2]
+
+    # Cost is the deviation from the white cube being above the red bin
+    cost = abs(horizontal_distance) if vertical_distance > 0 else 1000  # Large penalty if not above
+    return cost
+

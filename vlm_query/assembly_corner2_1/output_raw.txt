@@ -1,0 +1,70 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the handle of the green handle">"""
+    return grasp("the handle of the green handle")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the round ring", "the center of the body of the red stick", "the center of the body of the round ring is directly above the center of the body of the red stick by 10 centimeters">"""
+    pc1 = get_point_cloud("the body of the round ring", -1)
+    pc2 = get_point_cloud("the body of the red stick", -1)
+
+    # Compute the mean position of the body of the round ring and the body of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = ring_center[2] - stick_center[2] - 0.1  # 10 cm = 0.1 m
+
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"release">"""
+    release()
+    return
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the round ring", "the center of the body of the red stick", "the center of the body of the round ring remains directly above the center of the body of the red stick">"""
+    pc1 = get_point_cloud("the body of the round ring", -1)
+    pc2 = get_point_cloud("the body of the red stick", -1)
+
+    # Compute the mean position of the body of the round ring and the body of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    cost = horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 2 flow constraints
+def stage_2_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    if stage_2_subgoal_constraint1() < 0.01:  # Threshold for constraint satisfaction
+        return 3  # Proceed to stage 3
+    return 2  # Repeat stage 2
+
+### <stage constraints splitter> ###
+### stage 3 flow constraints
+def stage_3_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    return 4  # End of task
+
+### Object to segment
+object_to_segment = [
+    "the handle of the green handle",
+    "the body of the round ring",
+    "the body of the red stick",
+]

@@ -1,0 +1,15 @@
+## mask_indice: 3
+def segment_object(mask):
+    """
+    Function to find the head of the nail given the segmentation mask.
+    If the input mask already corresponds to the head, return it directly.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: Mask corresponding to the head of the nail in shape (H, W).
+    """
+    # Directly return the input mask as it already corresponds to the head
+    mask_output = mask.copy()
+    return mask_output

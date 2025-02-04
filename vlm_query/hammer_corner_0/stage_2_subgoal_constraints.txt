@@ -1,0 +1,19 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the head of the hammer", "the head of the nail", "the head of the hammer is directly above the head of the nail by 5 cm">"""
+    pc1 = get_point_cloud("the head of the hammer", -1)
+    pc2 = get_point_cloud("the head of the nail", -1)
+
+    # Compute the center of mass (mean position) for the hammer head and nail head
+    hammer_head_center = np.mean(pc1, axis=0)
+    nail_head_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(hammer_head_center[:2] - nail_head_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = hammer_head_center[2] - nail_head_center[2] - 0.05
+
+    # Cost is the sum of deviations from the ideal position
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+

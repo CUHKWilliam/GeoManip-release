@@ -1,0 +1,41 @@
+### Task Decomposition and Flow Control
+
+**Number of stages**: 4
+
+1. **Grasp the blue cube**  
+2. **Move the blue cube to the shelf**  
+3. **Place the blue cube on the shelf**  
+4. **Release the blue cube**
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### Stage 1: Grasp the blue cube
+- **Sub-goal constraints**:
+  - <"grasp", "the body of the blue cube">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the top surface of the blue cube", "the heading direction of the gripper approach of the robot is perpendicular to the plane of the top surface of the blue cube">
+  - <"sub-goal constraints", "the heading direction of the gripper binormal of the robot", "the plane of the top surface of the blue cube", "the heading direction of the gripper binormal of the robot is parallel to the plane of the top surface of the blue cube">
+
+---
+
+#### Stage 2: Move the blue cube to the shelf
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the blue cube", "the center of the opening of the shelf", "the center of the body of the blue cube is directly in front of the center of the opening of the shelf by around 10 centimeters">
+- **Flow constraints**:
+  - <"flow constraint", "the blue cube is in front of the shelf opening"> (go to stage 3 if satisfied; go to stage 2 if not satisfied)
+
+---
+
+#### Stage 3: Place the blue cube on the shelf
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the bottom surface of the blue cube", "the surface of the shelf", "the bottom surface of the blue cube is above the surface of the shelf by 1 centimeter">
+  - <"sub-goal constraints", "the center of the body of the blue cube", "the center of the shelf", "the center of the body of the blue cube is aligned with the center of the shelf">
+- **Flow constraints**:
+  - <"flow constraint", "the blue cube is aligned with the shelf surface"> (go to stage 4 if satisfied; go to stage 3 if not satisfied)
+
+---
+
+#### Stage 4: Release the blue cube
+- **Sub-goal constraints**:
+  - <"release">

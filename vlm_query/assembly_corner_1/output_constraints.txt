@@ -1,0 +1,57 @@
+### Task Decomposition and Flow Control
+
+The task "put the round ring into the red stick by grasping the green handle" involves **5 stages**:
+
+1. Grasp the green handle of the round ring.
+2. Align the round ring with the red stick.
+3. Insert the round ring into the red stick.
+4. Release the round ring.
+5. Retract the robot gripper.
+
+---
+
+### Stage 1: Grasp the green handle of the round ring
+- **Sub-goal constraints**:
+  - <"grasp", "the green handle of the round ring">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 2 if grasp is successful; retry stage 1 if not successful">
+
+---
+
+### Stage 2: Align the round ring with the red stick
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the round ring of the round ring", "the center of the top of the red stick of the red stick", "the center of the round ring of the round ring is directly above the center of the top of the red stick of the red stick by 2 centimeters">
+  - <"sub-goal constraints", "the plane of the round ring of the round ring", "the axis of the red stick of the red stick", "the plane of the round ring of the round ring is perpendicular to the axis of the red stick of the red stick">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 3 if alignment is successful; retry stage 2 if not successful">
+
+---
+
+### Stage 3: Insert the round ring into the red stick
+- **Path constraints**:
+  - <"path constraints", "the center of the round ring of the round ring", "the axis of the red stick of the red stick", "the center of the round ring of the round ring remains collinear with the axis of the red stick of the red stick">
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the bottom of the round ring of the round ring", "the top of the red stick of the red stick", "the bottom of the round ring of the round ring is in contact with the top of the red stick of the red stick">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 4 if insertion is successful; retry stage 3 if not successful">
+
+---
+
+### Stage 4: Release the round ring
+- **Sub-goal constraints**:
+  - <"release">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 5 after release">
+
+---
+
+### Stage 5: Retract the robot gripper
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the gripper of the robot", "the center of the red stick of the red stick", "the center of the gripper of the robot moves away from the center of the red stick of the red stick by 10 centimeters">
+- **Flow constraints**:
+  - <"flow constraint", "end task after retraction">
+
+---
+
+### Summary
+**Number of stages**: 5

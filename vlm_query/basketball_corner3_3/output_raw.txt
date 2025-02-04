@@ -1,0 +1,193 @@
+```python
+import numpy as np
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (grasping)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the basketball"> """
+    return grasp("the area of the body of the basketball")
+
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints (lifting the basketball vertically)
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the body of the basketball at its initial timestamp", "the center of the body of the basketball is directly above the center of the body of the basketball at its initial timestamp by more than 20 centimeters">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the center of the body of the basketball", 0)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball at the latest and initial timestamps
+    basketball_center_latest = np.mean(pc1, axis=0)
+    basketball_center_initial = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the centers
+    vertical_distance = basketball_center_latest[2] - basketball_center_initial[2]
+    
+    # The cost is based on how far the basketball is lifted vertically (should be more than 20 cm)
+    cost = max(0, 0.2 - vertical_distance)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 2 path constraints (lifting the basketball vertically)
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the plane of the surface of the table", "the center of the body of the basketball moves vertically away from the plane of the surface of the table">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the plane of the surface of the table", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball and the table surface
+    basketball_center = np.mean(pc1, axis=0)
+    table_surface = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the basketball and the table surface
+    vertical_distance = basketball_center[2] - table_surface[2]
+    
+    # The cost is based on how far the basketball is lifted vertically (should be positive)
+    cost = max(0, -vertical_distance)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (moving the basketball over the hoop)
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop of the basketball hoop", "the center of the body of the basketball is directly above the center of the hoop of the basketball hoop by around 20 centimeters">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the center of the hoop of the basketball hoop", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball and the hoop
+    basketball_center = np.mean(pc1, axis=0)
+    hoop_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(basketball_center[:2] - hoop_center[:2])
+    
+    # Calculate the vertical distance (z-axis) between the basketball and the hoop
+    vertical_distance = basketball_center[2] - hoop_center[2]
+    
+    # The cost is based on how close the basketball is to being directly above the hoop by around 20 cm
+    cost = abs(vertical_distance - 0.2) + horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 path constraints (moving the basketball over the hoop)
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop of the basketball hoop", "the center of the body of the basketball moves horizontally towards the center of the hoop of the basketball hoop">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the center of the hoop of the basketball hoop", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball and the hoop
+    basketball_center = np.mean(pc1, axis=0)
+    hoop_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(basketball_center[:2] - hoop_center[:2])
+    
+    # The cost is based on how far the basketball is from moving horizontally towards the hoop
+    cost = horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints (dropping the basketball into the hoop)
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the hoop of the basketball hoop", "the center of the body of the basketball is directly above the center of the hoop of the basketball hoop by around 5 centimeters">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the center of the hoop of the basketball hoop", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball and the hoop
+    basketball_center = np.mean(pc1, axis=0)
+    hoop_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(basketball_center[:2] - hoop_center[:2])
+    
+    # Calculate the vertical distance (z-axis) between the basketball and the hoop
+    vertical_distance = basketball_center[2] - hoop_center[2]
+    
+    # The cost is based on how close the basketball is to being directly above the hoop by around 5 cm
+    cost = abs(vertical_distance - 0.05) + horizontal_distance
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 4 path constraints (dropping the basketball into the hoop)
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop of the basketball hoop", "the center of the body of the basketball moves vertically towards the center of the hoop of the basketball hoop">"""
+    mask1 = segment("the center of the body of the basketball", -1)
+    mask2 = segment("the center of the hoop of the basketball hoop", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the mean position of the basketball and the hoop
+    basketball_center = np.mean(pc1, axis=0)
+    hoop_center = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the basketball and the hoop
+    vertical_distance = basketball_center[2] - hoop_center[2]
+    
+    # The cost is based on how far the basketball is from moving vertically towards the hoop
+    cost = abs(vertical_distance)
+    
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 5 sub-goal constraints (releasing the basketball)
+def stage_5_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the center of the body of the basketball",
+    "the center of the hoop of the basketball hoop",
+    "the plane of the surface of the table"
+]
+```

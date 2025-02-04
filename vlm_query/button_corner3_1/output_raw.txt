@@ -1,0 +1,113 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+```python
+def stage_1_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the plane of the surface of the button", "the center of the gripper of the robot is 10 cm along the normal of the surface of the button">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask2 = segment("the plane of the surface of the button", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Calculate the normal vector of the button surface (pc2)
+    covariance_matrix_button = np.cov(pc2.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_surface_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    button_surface_normal = button_surface_normal / np.linalg.norm(button_surface_normal)
+
+    # Compute the center of the gripper and the button surface
+    gripper_center = np.mean(pc1, axis=0)
+    button_surface_center = np.mean(pc2, axis=0)
+
+    # Calculate the distance along the normal of the button surface
+    distance_along_normal = np.dot(gripper_center - button_surface_center, button_surface_normal)
+    
+    # The cost is the deviation from the desired 10 cm distance
+    cost = abs(distance_along_normal - 0.10)
+    
+    return cost
+```
+
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+```python
+def stage_1_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the plane of the surface of the button", "the center of the gripper of the robot is 10 cm from the surface of the button">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask2 = segment("the plane of the surface of the button", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the center of the gripper and the button surface
+    gripper_center = np.mean(pc1, axis=0)
+    button_surface_center = np.mean(pc2, axis=0)
+
+    # Calculate the Euclidean distance between the gripper center and the button surface center
+    distance = np.linalg.norm(gripper_center - button_surface_center)
+    
+    # The cost is the deviation from the desired 10 cm distance
+    cost = abs(distance - 0.10)
+    
+    return cost
+```
+
+### <stage constraints splitter> ###
+### stage 2 target constraints
+```python
+def stage_2_target_constraint1():
+    """constraints: <"target constraints", "the center of the gripper of the robot", "the center of the body of the button", "the center of the gripper of the robot moves toward the center of the body of the button by 50 cm">"""
+    mask1 = segment("the center of the gripper of the robot", -1)
+    mask1_initial = segment("the center of the gripper of the robot", -2)
+    mask2 = segment("the center of the body of the button", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1_initial = mask1_initial
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1_initial = mask_to_pc(mask1_initial)
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the direction vector from the initial gripper position to the button
+    direction_vec = np.mean(pc2, axis=0) - np.mean(pc1_initial, axis=0)
+    direction_vec = direction_vec / np.linalg.norm(direction_vec)
+
+    # Compute the target position by moving 50 cm along the direction vector
+    target_position = np.mean(pc2, axis=0) + direction_vec * 0.50
+
+    # Compute the current gripper position
+    current_gripper_position = np.mean(pc1, axis=0)
+
+    # The cost is the distance between the current gripper position and the target position
+    cost = np.linalg.norm(current_gripper_position - target_position)
+    
+    return cost
+```
+
+### <stage constraints splitter> ###
+### stage 3 release
+```python
+def stage_3_release():
+    """constraints: <"release">"""
+    release()
+    return
+```
+
+### Object to Segment:
+```python
+object_to_segment = [
+    "the center of the gripper of the robot",
+    "the plane of the surface of the button",
+    "the center of the body of the button"
+]
+```

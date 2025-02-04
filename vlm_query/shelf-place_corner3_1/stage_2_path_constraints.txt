@@ -1,0 +1,13 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the body of the blue cube", "the shelf surface of the shelf", "the body of the blue cube remains above the shelf surface of the shelf">"""
+    pc1 = get_point_cloud("the body of the blue cube", -1)
+    pc2 = get_point_cloud("the shelf surface of the shelf", -1)
+
+    # Compute the center of mass (mean position) for the blue cube and the shelf surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    shelf_surface_center = np.mean(pc2, axis=0)
+
+    # Ensure the blue cube remains above the shelf surface
+    cost = max(0, shelf_surface_center[2] - blue_cube_center[2])
+    return cost
+

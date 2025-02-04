@@ -1,0 +1,50 @@
+### Task Decomposition and Flow Control
+
+The task involves putting the round ring onto the red stick by grasping the green handle. The task can be broken down into **5 stages**:
+
+1. Grasp the green handle of the round ring.
+2. Align the round ring with the red stick.
+3. Insert the round ring onto the red stick.
+4. Release the green handle of the round ring.
+
+---
+
+### Geometric Constraints and Flow Constraints
+
+#### Stage 1: Grasp the green handle of the round ring
+- **Sub-goal constraints**:
+  - <"grasp", "the green handle of the round ring">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 2 if grasp is successful; retry stage 1 if not successful">
+
+---
+
+#### Stage 2: Align the round ring with the red stick
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the round ring of the round ring", "the center of the top of the red stick of the red stick", "the center of the round ring of the round ring is directly above the center of the top of the red stick of the red stick by 2 centimeters">
+  - <"sub-goal constraints", "the plane of the round ring of the round ring", "the axis of the red stick of the red stick", "the plane of the round ring of the round ring is perpendicular to the axis of the red stick of the red stick">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 3 if alignment is successful; retry stage 2 if not successful">
+
+---
+
+#### Stage 3: Insert the round ring onto the red stick
+- **Path constraints**:
+  - <"path constraints", "the center of the round ring of the round ring", "the axis of the red stick of the red stick", "the center of the round ring of the round ring remains collinear with the axis of the red stick of the red stick">
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the bottom of the round ring of the round ring", "the top of the red stick of the red stick", "the bottom of the round ring of the round ring is in contact with the top of the red stick of the red stick">
+- **Flow constraints**:
+  - <"flow constraint", "proceed to stage 4 if insertion is successful; retry stage 3 if not successful">
+
+---
+
+#### Stage 4: Release the green handle of the round ring
+- **Sub-goal constraints**:
+  - <"release">
+- **Flow constraints**:
+  - <"flow constraint", "end task if release is successful; retry stage 4 if not successful">
+
+---
+
+### Number of Stages
+**4 stages**

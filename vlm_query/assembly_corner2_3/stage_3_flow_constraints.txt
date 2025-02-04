@@ -1,0 +1,7 @@
+def stage_3_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 4 if inserted; retry stage 3 if not inserted">"""
+    if stage_3_subgoal_constraint1() < 0.01 and stage_3_subgoal_constraint2() < 0.01:  # Threshold for insertion
+        return 4
+    else:
+        return 3
+

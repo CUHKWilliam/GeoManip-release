@@ -1,0 +1,16 @@
+## mask_indice: 1
+def segment_object(mask):
+    ## find out edge of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an array of the same shape as the mask to store the edge
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Iterate through each column to find the topmost True value and apply edge width
+    for j in range(W):
+        true_indices = np.where(mask[:, j])[0]  # Find row indices where the value is True in this column
+        if true_indices.size > 0:
+            topmost_index = true_indices[0]  # Get the topmost True index
+            mask_output[topmost_index, j] = True  # Set the edge in the new mask
+    
+    return mask_output

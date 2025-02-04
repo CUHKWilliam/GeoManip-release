@@ -1,0 +1,32 @@
+## mask_indice: 0
+## code start here
+def segment_object(mask):
+    """
+    Find the green handle of the round ring given the segmentation mask.
+
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+
+    Returns:
+        np.ndarray: Mask of the green handle in shape (H, W).
+    """
+    # Convert the mask to uint8 for processing
+    mask_uint8 = (mask * 255).astype(np.uint8)
+    
+    # Find contours in the mask
+    contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Initialize an empty mask for the handle
+    mask_output = np.zeros_like(mask, dtype=np.uint8)
+    
+    # Iterate through contours to find the handle
+    for contour in contours:
+        # Calculate the bounding rectangle for each contour
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Assume the handle is smaller and located at the edge of the ring
+        if h < mask.shape[0] * 0.2 and w < mask.shape[1] * 0.2:
+            # Draw the handle contour on the output mask
+            cv2.drawContours(mask_output, [contour], -1, 1, thickness=cv2.FILLED)
+    
+    return mask_output

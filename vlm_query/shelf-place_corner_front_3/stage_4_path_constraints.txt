@@ -1,0 +1,24 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the blue cube", "the plane of the surface of the middle stack of the shelf", "the center of the body of the blue cube moves vertically above the plane of the surface of the middle stack of the shelf">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the plane of the surface of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube and the middle stack surface
+    blue_cube_center = np.mean(pc1, axis=0)
+    middle_stack_surface = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the blue cube and the middle stack surface
+    horizontal_distance = np.linalg.norm(blue_cube_center[:2] - middle_stack_surface[:2])
+    
+    # Ensure the blue cube moves vertically (no significant horizontal movement)
+    cost = horizontal_distance
+    
+    return cost * 0
+

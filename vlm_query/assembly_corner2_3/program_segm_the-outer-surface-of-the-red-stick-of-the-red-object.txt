@@ -1,0 +1,14 @@
+## mask_indice: 1
+def segment_object(mask):
+    """
+    Find the outer surface of the red stick of the red object given the segmentation mask.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+        
+    Returns:
+        np.ndarray: Mask of the outer surface of the red stick in shape (H, W).
+    """
+    # If the input mask is already what we want, directly return it
+    mask_output = mask.copy()
+    return mask_output

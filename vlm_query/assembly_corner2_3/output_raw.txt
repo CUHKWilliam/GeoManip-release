@@ -1,0 +1,134 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the handle of the green object"> """
+    return grasp("the handle of the green object")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the round ring of the green object", "the center of the top of the red stick of the red object", "the center of the round ring of the green object is directly above the center of the top of the red stick of the red object by 2 centimeters">"""
+    pc1 = get_point_cloud("the round ring of the green object", -1)
+    pc2 = get_point_cloud("the top of the red stick of the red object", -1)
+
+    # Compute the center of mass for the round ring and the top of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_top_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_top_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = abs(ring_center[2] - stick_top_center[2] - 0.02)
+
+    # Combine the costs
+    cost = horizontal_distance + vertical_distance
+    return cost
+
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the round ring of the green object", "the center of the top of the red stick of the red object", "the center of the round ring of the green object remains above the center of the top of the red stick of the red object by 2 to 5 centimeters">"""
+    pc1 = get_point_cloud("the round ring of the green object", -1)
+    pc2 = get_point_cloud("the top of the red stick of the red object", -1)
+
+    # Compute the center of mass for the round ring and the top of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_top_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_top_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = abs(ring_center[2] - stick_top_center[2])
+
+    # Check if the vertical distance is within the range [0.02, 0.05]
+    if vertical_distance < 0.02 or vertical_distance > 0.05:
+        cost = horizontal_distance + abs(vertical_distance - 0.035)  # Penalize deviation from the midpoint
+    else:
+        cost = horizontal_distance
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the inner surface of the round ring of the green object", "the outer surface of the red stick of the red object", "the inner surface of the round ring of the green object is in contact with the outer surface of the red stick of the red object">"""
+    pc1 = get_point_cloud("the inner surface of the round ring of the green object", -1)
+    pc2 = get_point_cloud("the outer surface of the red stick of the red object", -1)
+
+    # Compute the distance between the inner surface of the ring and the outer surface of the stick
+    distances = np.linalg.norm(pc1[:, None, :] - pc2[None, :, :], axis=-1)
+    min_distance = np.min(distances)
+
+    # The cost is the deviation from zero (perfect contact)
+    cost = abs(min_distance)
+    return cost
+
+def stage_3_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the center of the round ring of the green object", "the center of the body of the red stick of the red object", "the center of the round ring of the green object moves along the center of the body of the red stick of the red object by 5 centimeters">"""
+    pc1_previous = get_point_cloud("the round ring of the green object", -2)
+    pc1_current = get_point_cloud("the round ring of the green object", -1)
+    pc2 = get_point_cloud("the body of the red stick of the red object", -1)
+
+    # Compute the center of mass for the round ring and the red stick
+    ring_center_previous = np.mean(pc1_previous, axis=0)
+    ring_center_current = np.mean(pc1_current, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Compute the direction vector from the previous ring center to the stick center
+    direction_vector = stick_center - ring_center_previous
+    direction_vector = direction_vector / np.linalg.norm(direction_vector)
+
+    # Compute the target position for the ring center
+    target_position = ring_center_previous + direction_vector * 0.05
+
+    # Compute the cost as the deviation from the target position
+    cost = np.linalg.norm(ring_center_current - target_position)
+    return cost
+
+### stage 3 path constraints
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the inner surface of the round ring of the green object", "the outer surface of the red stick of the red object", "the inner surface of the round ring of the green object remains in contact with the outer surface of the red stick of the red object">"""
+    pc1 = get_point_cloud("the inner surface of the round ring of the green object", -1)
+    pc2 = get_point_cloud("the outer surface of the red stick of the red object", -1)
+
+    # Compute the distance between the inner surface of the ring and the outer surface of the stick
+    distances = np.linalg.norm(pc1[:, None, :] - pc2[None, :, :], axis=-1)
+    min_distance = np.min(distances)
+
+    # The cost is the deviation from zero (perfect contact)
+    cost = abs(min_distance)
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+def stage_4_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+### <stage constraints splitter> ###
+### stage 2 flow constraints
+def stage_2_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 3 if aligned; retry stage 2 if not aligned">"""
+    if stage_2_subgoal_constraint1() < 0.01:  # Threshold for alignment
+        return 3
+    else:
+        return 2
+
+### stage 3 flow constraints
+def stage_3_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 4 if inserted; retry stage 3 if not inserted">"""
+    if stage_3_subgoal_constraint1() < 0.01 and stage_3_subgoal_constraint2() < 0.01:  # Threshold for insertion
+        return 4
+    else:
+        return 3
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the handle of the green object",
+    "the round ring of the green object",
+    "the top of the red stick of the red object",
+    "the inner surface of the round ring of the green object",
+    "the outer surface of the red stick of the red object",
+    "the body of the red stick of the red object",
+]

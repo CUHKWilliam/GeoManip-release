@@ -1,0 +1,242 @@
+## Query
+Query Task: "{}"
+
+## Instructions
+Suppose you are controlling a robot to perform manipulation tasks. The manipulation task is given as an image of the environment. For each given task, please perform the following steps:
+1. Task decomposition: 
+Determine how many stages are involved in the task. 
+Grasping or releasing must be an independent stage. 
+Some examples:
+  - "pouring tea from teapot":
+    - 5 stages: "grasp teapot", "align teapot with cup opening", "tilt teapot", "place the teapot on the table", "release"
+  - "put red block on top of blue block":
+    - 3 stages: "grasp red block", "drop the red block on top of blue block"
+  - "reorient bouquet and drop it upright into vase":
+    - 3 stages: "grasp bouquet", "reorient bouquet", and "keep upright and drop into vase"
+2. Geometric constraint generation: For each stage except for the grasping and release stage, please write geometric constraints in lines. Each line represent a constraint should be satisfied. 
+- Geometric constraint is a tuple of multiple element: <"constraints type", "`geometry 1` of `the object part` of `the object`, "`geometry 2` of `the object part` of `the object`, ...(if any),  "constraints">, each element is explained in the follows:
+  - "geometry":  Basic geometric primitive like the left edge, the center point, the plane, the normal, the right area, heading direction, and etc..
+  - "the object part": the key object part on an object, like the tip, the opening, the handle, the hinge, the slider, the gripper, etc.
+  - "the object": the complete object, like the black cup, the second door, the teapot, the robot, etc.
+  - "constraint":
+    - 1. basic geometric relationship including parallel, perpendicular, vertical, intersect, and etc.. 
+    - 2. positional constraint like above, below, to the left / right, and etc.. 
+    - 3. Distance range like "by 10 centimeters", "around 10 centimeters", "more than 25 centimeters", "10 centimeters to 20 centimeters", "45 degress", etc..
+    - 4. Transformation like "rotate", "shift", etc.
+  - Specify the <`geometry` of `the object part` of `the object`> in the "constraint"
+  - "constraints type": 
+    1. "sub-goal constraints": constraints among `geometry 1`, `geometry 2`, ... that must be satisfied **at the end of the stage**. In other word, it specifies the constraints of the destination position.
+    2. "path constraints": constraints among `geometry 1`, `geometry 2`, ... that must remain satisfied **within the stage**. In other word, it specifies the constaints on the way to the destination position.
+- Do not ignore "of". There must of at least two "of": "`geometry` of `the object part` of `the object`". If you what to specify `geometry` of the whole object, use `geometry` of the body of `the object`
+- For the grasping stage, sub-goal constraint 1 should be  <"grasp", "the area of `the object part` of `the object`">
+- For grasping stage, you can also specify the sub-goal constraints of the heading direction of the gripper approach of the robot or the heading direction of the gripper binormal of the robot:
+  - approach: the direction of the robot gripper pointing at, usually perpendicular to some surface. You can get the gripper approach by calling get_point_cloud("the gripper approach of the robot", -1). To find its heading direction, find its eigenvector with max eigenvalue.
+  - binormal: the direction of gripper opening / closing, usually perpendicular to some axis / heading direction or parallel to some normal. You can get the gripper binormal by calling get_point_cloud("the gripper binormal of the robot", -1). To find its heading direction, find its eigenvector with max eigenvalue.
+- To close the gripper only without grasping anything, output <"grasp", "">
+- If you want to use the gripper, only specify its center position, the heading direction(approach), or the binormal. 
+- For the releasing stage, sub-goal constraint should be <"release">
+- Avoid using the part that is invisible in the image like "bottom", "back part" and etc.
+- Please give as detailed constraint as possible.
+- To move something, you must grasp it first.
+- Each stage can only do a single action one time.
+- Don't omit stages for the repeating stages, expand and list them one by one.
+- Please answer according to the image we provided, which is the previous scene.
+
+Here are some examples and knowledge for you to generate the geometric constraint:
+{}
+num_stages = ?
+<STEP SPLITTER>
+
+Please translate all the above geometric constraints for each stage into the Python cost function.
+- We can obtain the point cloud by calling Python function "get_point_cloud(`the object part` of `the object`', `timestamp`)".
+    - we record the position of the `geometry` since the grasping / contact stage, and record it into array.
+    - specify `timestamp` to retrive `geometry` mask at the given timestamp. For example, timestamp = -2 to retrieve the previous mask at the time of grasping. timestamp = -1 to retrieve the current mask.
+    - Example 1, if I want point cloud of "the axis of the body of the windmill" at its current timestamp, I can obtain the point cloud by  "mask = get_point_cloud('the body of the windmill', -1)". 
+    - Example 2, if I want point cloud of "the plane of the surface of the door" at its previous timestamp, I can obtain the point cloud by "mask = get_point_cloud('the surface of the door', -2)".
+- Please implement a Python cost function "stage_i_subgoal_constraints()", "stage_i_path_constraints()" for all the constraints tuples in the <> brackets one by one, except for the grasping and releasing constraints. It returns the cost measuring to what extent the constraint is satisfied. The constraint is satisfied when the cost goes down to 0. 
+- Grasping, releasing should be a seperate sub-goal stage. 
+- For sub-goal constraint 1 of grasping , directly return grasp(`the object part` of `the object`). 
+- You can specify multiple sub-goal constraints for grasping to specify the approach and binormal.
+- For releasing in the sub-goal function directly return release().
+- Constraint codes of each stage are splitted by a line "### <stage constraints splitter> ###"
+- The unit of length is meter.
+- The stage start from 1.
+- If it's angle constraint related to parallel or perpendicular, multiply the cost by 5.
+- Don't omit stages for the repeating stages, expand and list them one by one.
+- Don't call function of other stage, copy the function if necessary, but don't just call it.
+- Don't call function defined in the geometry knowledge, copy it if necessary.
+- Don't call function that is not defined !
+- Left is -y axis, right is y axis, up is z axis, down is -z axis, front is x axis, back is -x axis.
+
+Here are some examples:
+
+### <stage constraints splitter> ### (if any)
+### stage ? sub-goal constraints
+def stage_?_subgoal_constraint1():
+  """constraints: <"grasp", "the body of the banana"> """
+    return grasp("the body of the banana")
+
+
+### <stage constraints splitter> ###
+### stage ? sub-goal constraints 
+def stage_?_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the axis of the body of the cucumber", "the plane of the blade of the kitchen knife", "the axis of the body of the cucumber is perpendicular to the plane of the blade of the kitchen knife"> (for cutting cucumber)""" 
+    pc1 = get_point_cloud("the body of the cucumber", -1)
+    pc2 = get_point_cloud("the blade of the kitchen knife", -1)
+
+    # Calculate the axis of the the body of the cucumber (pc1)
+    # Compute the covariance matrix of the points in the point cloud
+    covariance_matrix_cucumber = np.cov(pc1.T)
+    # Get the eigenvalues and eigenvectors of the covariance matrix
+    eigenvalues_cucumber, eigenvectors_cucumber = np.linalg.eig(covariance_matrix_cucumber)
+    # The eigenvector corresponding to the largest eigenvalue is the axis of the body of the cucumber
+    cucumber_axis = eigenvectors_cucumber[:, np.argmax(eigenvalues_cucumber)]
+    if cucumber_axis[np.argmax(cucumber_axis)] < 0:
+      cucumber_axis = -cucumber_axis
+
+    # Calculate the normal vector of the plane of the blade of the kitchen knife (pc2)
+    covariance_matrix_knife = np.cov(pc2.T)
+    eigenvalues_knife, eigenvectors_knife = np.linalg.eig(covariance_matrix_knife)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    knife_surface_normal = eigenvectors_knife[:, np.argmin(eigenvalues_knife)]
+    if knife_surface_normal[np.argmax(knife_surface_normal)] < 0:
+      knife_surface_normal = -knife_surface_normal
+
+    # Normalize both vectors
+    cucumber_axis = cucumber_axis / np.linalg.norm(cucumber_axis)
+    knife_surface_normal = knife_surface_normal / np.linalg.norm(knife_surface_normal)
+    
+    # Compute the dot product between the cucumber axis and knife surface normal
+    dot_product = np.dot(cucumber_axis, knife_surface_normal)
+    
+    # cucumber_axis perpendicular to knife surface is to be parallel to the knife surface normal
+    cost = (1 - abs(dot_product)) * 5.
+    
+    return cost
+
+def stage_?_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the center of the body of the cucumber", "the center of the body of the kitchen knife", "the center of the body of the cucumber is directly above the center of the body of the kitchen knife by 10cm"> (for cutting cucumber)"""
+    pc1 = get_point_cloud("the body of the cucumber", -1)
+    pc2 = get_point_cloud("the body of the kitchen knife", -1)
+
+    # Compute the mean position of the body the cucumber and the body of the kitchen knife
+    body_of_cucumber_center = np.mean(pc1, axis=0)
+    body_of_knife_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(body_of_cucumber_center[:2] - body_of_knife_center[:2])
+    
+    # Calculate the center of the body of the knife center should be 20 cm above the center of the body of the cucumber
+    vertical_distance = body_of_knife_center[2] - 0.1 - body_of_cucumber_center[2]
+    
+    cost = abs(vertical_distance) + horizontal_distance
+    
+    return cost
+
+def stage_?_subgoal_constraint3():
+    """constraints: <"sub-goal constraints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife is parallel to the plane of the surface of the table"> (for cutting cucumber)""" 
+    pc1 = get_point_cloud("the blade of the knife", -1)
+    pc2 = get_point_cloud("the surface of the table", -1)
+
+    # Calculate the heading direction vector of the plane of the blade of the knife (pc1)
+    covariance_matrix_knife = np.cov(pc2.T)
+    eigenvalues_knife, eigenvectors_knife = np.linalg.eig(covariance_matrix_knife)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    knife_surface_heading = eigenvectors_knife[:, np.argmin(eigenvalues_knife)]
+    if knife_surface_heading[np.argmax(knife_surface_heading)] < 0:
+      knife_surface_heading = -knife_surface_heading
+
+    # Calculate the normal vector of the plane of the surface of the table (pc2)
+    covariance_matrix_table = np.cov(pc2.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    # The eigenvector corresponding to the smallest eigenvalue is the normal vector of the surface
+    table_surface_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+    if table_surface_normal[np.argmax(table_surface_normal)] < 0:
+      table_surface_normal = -table_surface_normal
+
+    # Normalize both vectors
+    table_surface_normal = table_surface_normal / np.linalg.norm(table_surface_normal)
+    knife_surface_heading = knife_surface_heading / np.linalg.norm(knife_surface_heading)
+    
+    # Compute the dot product between the table axis and knife surface normal
+    dot_product = np.dot(table_surface_normal, knife_surface_heading)
+    
+    # knife surface heading parallel to the plane of the table surface is to be perpendicular to the table surface plane normal
+    cost = abs(dot_product) * 5.
+    return cost
+
+def stage_?_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the plane of the surface of the door", "the axis of the hinge of the door", "the plane of the surface of the door rotate around the axis of the hinge of the door by 60 degrees"> (for opening the door)"""
+    pc1 = get_point_cloud("the surface of the door", -1)
+    pc1_previous = get_point_cloud("the surface of the door", -2)
+    pc2 = get_point_cloud("the hinge of the door", -2)
+
+    # Step 1: Normalize the axis of the hinge of the door (from pc2)
+    covariance_matrix_door = np.cov(pc2.T)
+    eigenvalues_door, eigenvectors_door = np.linalg.eig(covariance_matrix_door)
+    door_axis = eigenvectors_door[:, np.argmax(eigenvalues_door)]
+    door_axis = door_axis / np.linalg.norm(door_axis)  # Normalize the axis vector
+    if door_axis[np.argmax(door_axis)] < 0:
+      door_axis= -door_axis
+
+    # Step 2: Convert the angle from degrees to radians
+    angle_radians = np.radians(angle_degrees)
+
+    # Step 3: Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -door_axis[2], door_axis[1]],
+                  [door_axis[2], 0, -door_axis[0]],
+                  [-door_axis[1], door_axis[0], 0]])  # Skew-symmetric matrix for door_axis
+    I = np.eye(3)  # Identity matrix
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Step 4: Rotate each point in pc1
+    rotated_pc1 = np.dot(pc1_previous - pc2.mean(0), rotation_matrix.T) + pc2.mean(0)  # Apply rotation matrix to each point
+
+    # Step 5: compute the cost of how pc1 aligns with rotated_pc1.
+    cost = np.linalg.norm(pc1 - rotated_pc1, axis=1).sum()
+    return cost
+
+
+### <stage constraints splitter> ###
+
+### stage ? sub-goal constraints
+def stage_?_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+
+## Some geometry-related knowledge here:
+{}
+## End knowledge
+
+Please write the codes below:
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (if any)
+## if it is a grasping constaints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "`geometry` of `the object part' of `the object`"> """
+    return grasp("`the object part' of `the object`")
+
+
+def stage_1_subgoal_constraint1():
+    """constraints: <?, ?, ?,..., ?>"""
+    mask1 = get_point_cloud(?)
+    mask2 = get_point_cloud(?)
+    ...
+    return cost
+# Add more sub-goal constraints if needed
+...
+
+### stage 1 path constraints (if any)
+def stage_1_path_constraint1():
+    """constraints: <?, ?, ?, ?>"""
+    mask1 = get_point_cloud(?)
+    mask2 = get_point_cloud(?)
+    ...
+    return cost
+
+# Add more path constraints if needed
+...
+
+Finally, write a list of "`geometry` of `the object part` of `the object`" in all the <> brackets:
+object_to_segment = [?]

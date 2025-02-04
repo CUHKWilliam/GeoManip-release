@@ -1,0 +1,13 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the body of the red hoop", "the distance between the center of the body of the basketball and the center of the body of the red hoop remains unchanged">"""
+    pc1_previous = get_point_cloud("the body of the basketball", -2)
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the body of the red hoop", -2)
+
+    # Calculate the previous and current distances
+    distance_previous = np.linalg.norm(np.mean(pc1_previous, axis=0) - np.mean(pc2, axis=0))
+    distance_current = np.linalg.norm(np.mean(pc1, axis=0) - np.mean(pc2, axis=0))
+
+    cost = abs(distance_previous - distance_current)
+    return cost
+

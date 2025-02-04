@@ -1,0 +1,23 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot moves toward the center of the body of the red button">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the center of the gripper and the button
+    gripper_center_previous = np.mean(pc_gripper_previous, axis=0)
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the direction vector from the previous gripper center to the button center
+    direction_vector = button_center - gripper_center_previous
+    direction_vector = direction_vector / np.linalg.norm(direction_vector)  # Normalize the vector
+
+    # Calculate the current movement vector of the gripper
+    movement_vector = gripper_center - gripper_center_previous
+    movement_vector = movement_vector / np.linalg.norm(movement_vector)  # Normalize the vector
+
+    # Compute the cost as the deviation from the desired movement direction
+    cost = 1 - np.dot(direction_vector, movement_vector)
+    return cost
+

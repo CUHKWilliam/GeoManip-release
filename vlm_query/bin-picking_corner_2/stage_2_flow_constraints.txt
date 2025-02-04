@@ -1,0 +1,8 @@
+def stage_2_flow_constraints():
+    """constraints: <"flow constraint", "goto stage 3 if position is achieved; retry stage 2 if not achieved">"""
+    cost = stage_2_subgoal_constraint1()
+    if cost < 0.01:  # Threshold for position achieved
+        return 3
+    else:
+        return 2
+

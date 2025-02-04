@@ -1,0 +1,39 @@
+def stage_2_target_constraint1():
+    """constraints: <"targets constraints", "the center of the handle of the red faucet", "the axis of the body of the red faucet", "the center of the handle of the red faucet rotates around the axis of the body of the red faucet by at least 90 degrees">"""
+    mask1_current = segment("the center of the handle of the red faucet", -1)  # Current position of the handle
+    mask1 = segment("the center of the handle of the red faucet", -2)  # Position at the time of grasping
+    mask2 = segment("the axis of the body of the red faucet", -2)  # Axis of the faucet
+
+    if mask1.shape[-1] == 3:
+        pc1_current = mask1_current
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1_current = mask_to_pc(mask1_current)
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Step 1: Normalize the axis of the body of the red faucet (from pc2)
+    covariance_matrix_faucet = np.cov(pc2.T)
+    eigenvalues_faucet, eigenvectors_faucet = np.linalg.eig(covariance_matrix_faucet)
+    faucet_axis = eigenvectors_faucet[:, np.argmax(eigenvalues_faucet)]
+    faucet_axis = faucet_axis / np.linalg.norm(faucet_axis)  # Normalize the axis vector
+
+    # Step 2: Convert the angle from degrees to radians (90 degrees)
+    angle_radians = np.radians(90)
+
+    # Step 3: Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -faucet_axis[2], faucet_axis[1]],
+                  [faucet_axis[2], 0, -faucet_axis[0]],
+                  [-faucet_axis[1], faucet_axis[0], 0]])  # Skew-symmetric matrix for faucet_axis
+    I = np.eye(3)  # Identity matrix
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Step 4: Rotate each point in pc1
+    rotated_pc1 = np.dot(pc1 - pc2.mean(0), rotation_matrix.T) + pc2  # Apply rotation matrix to the pc1
+
+    # Step 5: Compute the cost of how previous pc1 aligns with rotated_pc1.
+    distances = np.linalg.norm(pc1_current - rotated_pc1, axis=1)  # Use the current pc1 to calculate the cost
+    cost = np.sum(distances)
+    return cost
+

@@ -1,0 +1,22 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the round ring of the green object", "the center of the top of the red stick of the red object", "the center of the round ring of the green object remains above the center of the top of the red stick of the red object by 2 to 5 centimeters">"""
+    pc1 = get_point_cloud("the round ring of the green object", -1)
+    pc2 = get_point_cloud("the top of the red stick of the red object", -1)
+
+    # Compute the center of mass for the round ring and the top of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_top_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_top_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = abs(ring_center[2] - stick_top_center[2])
+
+    # Check if the vertical distance is within the range [0.02, 0.05]
+    if vertical_distance < 0.02 or vertical_distance > 0.05:
+        cost = horizontal_distance + abs(vertical_distance - 0.035)  # Penalize deviation from the midpoint
+    else:
+        cost = horizontal_distance
+    return cost
+

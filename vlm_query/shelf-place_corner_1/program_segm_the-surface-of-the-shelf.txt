@@ -1,0 +1,15 @@
+## mask_indice: 7
+def segment_object(mask):
+    """
+    Process the input segmentation mask to find the surface of the shelf.
+    If the input mask already represents the desired surface, return it directly.
+    
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of the segmentation mask (H, W).
+        
+    Returns:
+        np.ndarray: Processed mask representing the surface of the shelf (H, W).
+    """
+    # Directly return the input mask as it already represents the desired surface
+    mask_output = mask.copy()
+    return mask_output

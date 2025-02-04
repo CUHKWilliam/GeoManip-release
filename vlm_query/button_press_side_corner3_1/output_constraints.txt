@@ -1,0 +1,35 @@
+### Task Decomposition and Flow Control
+
+The task "press the body of the red button" involves **3 stages**:
+1. Close the gripper (to prepare for pressing).
+2. Move to the ready-to-press position.
+3. Press the red button.
+
+---
+
+### Stage 1: Close the Gripper
+- **Sub-goal constraints**:
+  - <"grasp", ""> (close the gripper without grasping anything).
+
+---
+
+### Stage 2: Move to Ready-to-Press Position
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button of the button", "the center of the gripper of the robot is colinear with the normal of the body of the red button of the button by 10 cm">.
+
+---
+
+### Stage 3: Press the Red Button
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button of the button", "the center of the gripper of the robot moves toward the center of the body of the red button of the button by 1 cm">.
+
+---
+
+### Flow Constraints
+- **Stage 1 to Stage 2**: Automatically transition after closing the gripper.
+- **Stage 2 to Stage 3**: Automatically transition after reaching the ready-to-press position.
+
+---
+
+### Total Number of Stages
+**3 stages**

@@ -1,0 +1,16 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the basketball", "the center of the body of the basketball", "the center of the body of the basketball is above its initial position by 20 centimeters">"""
+    pc = get_point_cloud("the body of the basketball", -1)
+    pc_initial = get_point_cloud("the body of the basketball", -2)
+
+    # Compute the center of the basketball at the current and initial positions
+    center_current = np.mean(pc, axis=0)
+    center_initial = np.mean(pc_initial, axis=0)
+
+    # Calculate the vertical displacement
+    vertical_displacement = center_current[2] - center_initial[2]
+
+    # The target vertical displacement is 0.2 meters (20 cm)
+    cost = abs(vertical_displacement - 0.2)
+    return cost
+

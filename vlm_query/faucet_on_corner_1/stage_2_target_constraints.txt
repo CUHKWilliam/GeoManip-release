@@ -1,0 +1,35 @@
+def stage_2_target_constraint1():
+    """constraints: <"targets constraints", "the axis of the body of the red faucet", "the axis of the body of the red faucet at its initial timestamp", "the axis of the body of the red faucet rotates around the axis of the body of the red faucet at its initial timestamp by at least 100 degrees">"""
+    mask1_current = segment("the axis of the body of the red faucet", -1)  # Current axis
+    mask1_initial = segment("the axis of the body of the red faucet", -2)  # Initial axis
+
+    if mask1_current.shape[-1] == 3:
+        pc1_current = mask1_current
+        pc1_initial = mask1_initial
+    else:
+        pc1_current = mask_to_pc(mask1_current)
+        pc1_initial = mask_to_pc(mask1_initial)
+
+    # Calculate the axis of the red faucet at the current and initial timestamps
+    covariance_matrix_current = np.cov(pc1_current.T)
+    eigenvalues_current, eigenvectors_current = np.linalg.eig(covariance_matrix_current)
+    faucet_axis_current = eigenvectors_current[:, np.argmax(eigenvalues_current)]
+
+    covariance_matrix_initial = np.cov(pc1_initial.T)
+    eigenvalues_initial, eigenvectors_initial = np.linalg.eig(covariance_matrix_initial)
+    faucet_axis_initial = eigenvectors_initial[:, np.argmax(eigenvalues_initial)]
+
+    # Normalize both axes
+    faucet_axis_current = faucet_axis_current / np.linalg.norm(faucet_axis_current)
+    faucet_axis_initial = faucet_axis_initial / np.linalg.norm(faucet_axis_initial)
+
+    # Compute the angle between the current and initial axes
+    dot_product = np.dot(faucet_axis_current, faucet_axis_initial)
+    angle_radians = np.arccos(np.clip(dot_product, -1.0, 1.0))  # Clip to avoid numerical errors
+    angle_degrees = np.degrees(angle_radians)
+
+    # The cost is based on how far the rotation is from 100 degrees
+    cost = max(0, 100 - angle_degrees)
+
+    return cost
+

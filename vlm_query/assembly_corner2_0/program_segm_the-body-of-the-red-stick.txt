@@ -1,0 +1,15 @@
+## mask_indice: 1
+## code start here
+def segment_object(mask):
+    """
+    Find the body of the red stick given the segmentation mask.
+
+    Parameters:
+        mask (np.ndarray): Boolean numpy array of a segmentation mask in shape (H, W).
+
+    Returns:
+        np.ndarray: The mask representing the body of the red stick in shape (H, W).
+    """
+    # If the input mask is already what we want, directly return it
+    mask_output = mask.copy()
+    return mask_output

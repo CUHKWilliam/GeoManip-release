@@ -1,0 +1,22 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot moves toward the center of the body of the red button by 100 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the vector from the gripper's previous position to the button center
+    gripper_previous_center = np.mean(pc_gripper_previous, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+    vector_to_button = button_center - gripper_previous_center
+
+    # Normalize the vector
+    vector_to_button = vector_to_button / np.linalg.norm(vector_to_button)
+
+    # Calculate the target position of the gripper
+    target_position = gripper_previous_center + vector_to_button * 1.0  # 100 cm = 1.0 m
+
+    # Calculate the cost as the distance between the gripper's current position and the target position
+    gripper_center = np.mean(pc_gripper, axis=0)
+    cost = np.linalg.norm(gripper_center - target_position)
+    return cost
+

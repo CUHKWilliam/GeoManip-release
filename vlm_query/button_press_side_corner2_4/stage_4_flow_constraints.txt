@@ -1,0 +1,4 @@
+def stage_4_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    return 5  # Transition to the next stage
+

@@ -1,0 +1,11 @@
+*.so
+*.pth
+*.pkl
+*.npy
+*.mp4
+*.png
+*.jpeg
+*.jpg
+*.ply
+*.pcd
+

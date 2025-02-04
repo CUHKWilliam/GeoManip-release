@@ -1,0 +1,15 @@
+def stage_4_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the round ring", "the center of the body of the red stick", "the center of the body of the round ring remains around the center of the body of the red stick">"""
+    pc1 = get_point_cloud("the body of the round ring", -1)
+    pc2 = get_point_cloud("the body of the red stick", -1)
+
+    # Compute the mean position of the body of the round ring and the body of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Calculate the distance between the centers
+    distance = np.linalg.norm(ring_center - stick_center)
+
+    cost = abs(distance)
+    return cost
+

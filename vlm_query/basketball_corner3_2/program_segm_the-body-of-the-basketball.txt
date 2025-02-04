@@ -1,0 +1,12 @@
+## mask_indice: 3
+def segment_object(mask):
+    ## find out area of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # The body of the basketball is the area where the mask is True
+    mask_output = np.zeros((H, W), dtype=bool)
+    
+    # Copy the entire mask where the object is segmented (True values)
+    mask_output[mask == True] = True
+    
+    return mask_output

@@ -1,0 +1,4 @@
+def stage_3_flow_constraints():
+    """constraints: <"flow constraint", "end task after pressing is completed">"""
+    return None  # End task after this stage
+

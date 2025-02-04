@@ -1,0 +1,121 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "">"""
+    return grasp("")
+
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the area of the body of the red button", "the center of the gripper of the robot colinear with the normal of the area of the body of the red button by 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button_area = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the normal vector of the area of the body of the red button
+    covariance_matrix_button = np.cov(pc_button_area.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Calculate the vector from the gripper center to the button area center
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_area_center = np.mean(pc_button_area, axis=0)
+    vector_to_button = button_area_center - gripper_center
+
+    # Normalize the vector
+    vector_to_button = vector_to_button / np.linalg.norm(vector_to_button)
+
+    # Compute the dot product to check colinearity
+    dot_product = np.dot(vector_to_button, button_normal)
+
+    # Calculate the distance to ensure the gripper is 10 cm away
+    distance = np.linalg.norm(button_area_center - gripper_center) - 0.1
+
+    cost = abs(1 - abs(dot_product)) * 5 + abs(distance)
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the center of the gripper of the robot moves toward the center of the body of the red button by 100 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the vector from the gripper's previous position to the button center
+    gripper_previous_center = np.mean(pc_gripper_previous, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+    vector_to_button = button_center - gripper_previous_center
+
+    # Normalize the vector
+    vector_to_button = vector_to_button / np.linalg.norm(vector_to_button)
+
+    # Calculate the target position of the gripper
+    target_position = gripper_previous_center + vector_to_button * 1.0  # 100 cm = 1.0 m
+
+    # Calculate the cost as the distance between the gripper's current position and the target position
+    gripper_center = np.mean(pc_gripper, axis=0)
+    cost = np.linalg.norm(gripper_center - target_position)
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+def stage_4_subgoal_constraint1():
+    """constraints: <"release">"""
+    release()
+    return
+
+
+### <stage constraints splitter> ###
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the area of the body of the red button", "the distance between the center of the gripper of the robot and the area of the body of the red button remains 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button_area = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the distance between the gripper center and the button area center
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_area_center = np.mean(pc_button_area, axis=0)
+    distance = np.linalg.norm(gripper_center - button_area_center)
+
+    cost = abs(distance - 0.1)  # 10 cm = 0.1 m
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 path constraints
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red button", "the distance between the center of the gripper of the robot and the center of the body of the red button decreases by 100 cm">"""
+    pc_gripper_previous = get_point_cloud("the gripper of the robot", -2)
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the previous and current distances
+    gripper_previous_center = np.mean(pc_gripper_previous, axis=0)
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    previous_distance = np.linalg.norm(gripper_previous_center - button_center)
+    current_distance = np.linalg.norm(gripper_center - button_center)
+
+    cost = abs(previous_distance - current_distance - 1.0)  # 100 cm = 1.0 m
+    return cost
+
+
+### <stage constraints splitter> ###
+### stage 3 flow constraints
+def stage_3_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    return 4  # Transition to stage 4 after pressing
+
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the gripper of the robot",
+    "the body of the red button",
+    "the area of the body of the red button",
+]

@@ -1,0 +1,12 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the basketball", "the center of the hoop opening of the hoop", "the center of the body of the basketball remains at a constant height above the center of the hoop opening of the hoop">"""
+    pc1 = get_point_cloud("the body of the basketball", -1)
+    pc2 = get_point_cloud("the hoop opening of the red hoop", -1)
+
+    # Calculate the vertical distance (z-axis) between the basketball and the hoop
+    vertical_distance = abs(pc1.mean(0)[2] - pc2.mean(0)[2] - 0.1)
+
+    cost = vertical_distance
+    return 0
+    return cost
+

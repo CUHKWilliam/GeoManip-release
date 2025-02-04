@@ -1,0 +1,16 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the handle of the red handle", "the distance between the center of the gripper of the robot and the center of the handle of the red handle remains 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_handle = get_point_cloud("the handle of the red handle", -1)
+
+    # Compute the center of the gripper and the handle
+    gripper_center = np.mean(pc_gripper, axis=0)
+    handle_center = np.mean(pc_handle, axis=0)
+
+    # Compute the distance between the gripper and the handle
+    distance = np.linalg.norm(gripper_center - handle_center)
+
+    # The target distance is 10 cm
+    cost = abs(distance - 0.1)
+    return cost
+

@@ -1,0 +1,23 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the gripper of the robot", "the body of the red button", "the center of the gripper of the robot colinear with the normal of the body of the red button by 10 cm">"""
+    pc_gripper = get_point_cloud("the gripper of the robot", -1)
+    pc_button = get_point_cloud("the body of the red button", -1)
+
+    # Calculate the normal vector of the body of the red button
+    covariance_matrix_button = np.cov(pc_button.T)
+    eigenvalues_button, eigenvectors_button = np.linalg.eig(covariance_matrix_button)
+    button_normal = eigenvectors_button[:, np.argmin(eigenvalues_button)]
+    if button_normal[np.argmax(button_normal)] < 0:
+        button_normal = -button_normal
+
+    # Calculate the center of the gripper and the button
+    gripper_center = np.mean(pc_gripper, axis=0)
+    button_center = np.mean(pc_button, axis=0)
+
+    # Calculate the target position for the gripper
+    target_position = button_center + button_normal * 0.1  # 10 cm along the button's normal
+
+    # Compute the cost as the distance between the gripper's center and the target position
+    cost = np.linalg.norm(gripper_center - target_position)
+    return cost
+

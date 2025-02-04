@@ -1,0 +1,5 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the blue cube"> """
+    return 0
+    return grasp("the area of the body of the blue cube")
+

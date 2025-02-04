@@ -1,0 +1,5 @@
+def stage_2_flow_constraints():
+    """constraints: <"flow constraints", "condition">"""
+    # No specific flow constraints, proceed to the next stage sequentially
+    return 3
+

@@ -1,0 +1,18 @@
+## mask_indice: 5
+def segment_object(mask):
+    ## find out center of image as mask_output, mask_output should still be in the shape(H, W)
+    H, W = mask.shape[0], mask.shape[1]
+    
+    # Initialize an empty mask for the output
+    mask_output = np.zeros_like(mask, dtype=bool)
+    
+    # Find the center of the mask
+    center_x, center_y = W // 2, H // 2
+    
+    # Define a small region around the center to segment the button
+    region_size = min(H, W) // 10  # Adjust region size as needed
+    
+    # Set the region around the center to True in the output mask
+    mask_output[center_y - region_size:center_y + region_size, center_x - region_size:center_x + region_size] = True
+    
+    return mask_output

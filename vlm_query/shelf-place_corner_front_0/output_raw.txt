@@ -1,0 +1,133 @@
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints (Grasping)
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the blue cube">"""
+    return grasp("the area of the body of the blue cube")
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints (Lifting the blue cube vertically)
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the body of the blue cube at its initial timestamp", "the center of the body of the blue cube is above the center of the body of the blue cube at its initial timestamp by around 20 centimeters">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the center of the body of the blue cube", 0)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube at the latest and initial timestamps
+    center_latest = np.mean(pc1, axis=0)
+    center_initial = np.mean(pc2, axis=0)
+    
+    # Calculate the vertical distance (z-axis) between the latest and initial positions
+    vertical_distance = center_latest[2] - center_initial[2]
+    
+    # The target vertical distance is 20 cm
+    cost = abs(vertical_distance - 0.20)
+    
+    return cost
+
+### stage 2 path constraints
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the blue cube", "the plane of the surface of the table", "the center of the body of the blue cube is perpendicular to the plane of the surface of the table">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the plane of the surface of the table", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Calculate the normal vector of the plane of the surface of the table (pc2)
+    covariance_matrix_table = np.cov(pc2.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    table_surface_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+    
+    # The z-axis of the blue cube should be perpendicular to the table surface
+    cube_z_axis = np.array([0, 0, 1])  # Assuming the z-axis is vertical
+    
+    # Compute the dot product between the cube's z-axis and the table's surface normal
+    dot_product = np.dot(cube_z_axis, table_surface_normal)
+    
+    # The cost is based on how close the dot product is to 0 (perpendicular)
+    cost = abs(dot_product) * 5.
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints (Move the blue cube to the middle stack of the shelf)
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the blue cube", "the center of the middle stack of the shelf", "the center of the body of the blue cube is directly above the center of the middle stack of the shelf by around 5 centimeters">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the center of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Compute the mean position of the blue cube and the middle stack of the shelf
+    center_cube = np.mean(pc1, axis=0)
+    center_shelf = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(center_cube[:2] - center_shelf[:2])
+    
+    # Calculate the vertical distance (z-axis) between the blue cube and the shelf
+    vertical_distance = center_cube[2] - center_shelf[2]
+    
+    # The target vertical distance is 5 cm
+    cost = abs(vertical_distance - 0.05) + horizontal_distance
+    
+    return cost
+
+### stage 3 path constraints
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the blue cube", "the plane of the surface of the middle stack of the shelf", "the center of the body of the blue cube is perpendicular to the plane of the surface of the middle stack of the shelf">"""
+    mask1 = segment("the center of the body of the blue cube", -1)
+    mask2 = segment("the plane of the surface of the middle stack of the shelf", -1)
+    
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+    
+    # Calculate the normal vector of the plane of the surface of the middle stack of the shelf (pc2)
+    covariance_matrix_shelf = np.cov(pc2.T)
+    eigenvalues_shelf, eigenvectors_shelf = np.linalg.eig(covariance_matrix_shelf)
+    shelf_surface_normal = eigenvectors_shelf[:, np.argmin(eigenvalues_shelf)]
+    
+    # The z-axis of the blue cube should be perpendicular to the shelf surface
+    cube_z_axis = np.array([0, 0, 1])  # Assuming the z-axis is vertical
+    
+    # Compute the dot product between the cube's z-axis and the shelf's surface normal
+    dot_product = np.dot(cube_z_axis, shelf_surface_normal)
+    
+    # The cost is based on how close the dot product is to 0 (perpendicular)
+    cost = abs(dot_product) * 5.
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints (Releasing the blue cube)
+def stage_4_subgoal_constraint1():
+    """constraints: <"release">"""
+    release()
+    return
+
+### List of `geometry` of `the object part` of `the object` in all the <> brackets:
+object_to_segment = [
+    "the center of the body of the blue cube",
+    "the plane of the surface of the table",
+    "the center of the middle stack of the shelf",
+    "the plane of the surface of the middle stack of the shelf"
+]

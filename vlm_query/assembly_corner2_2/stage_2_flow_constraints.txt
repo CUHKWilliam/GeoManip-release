@@ -1,0 +1,18 @@
+def stage_2_flow_constraints():
+    """constraints: <"flow constraints", "condition"> """
+    pc1 = get_point_cloud("the body of the round ring", -1)
+    pc2 = get_point_cloud("the body of the red stick", -1)
+
+    # Compute the mean position of the body of the round ring and the body of the red stick
+    ring_center = np.mean(pc1, axis=0)
+    stick_center = np.mean(pc2, axis=0)
+
+    # Check if the round ring is within 10 cm above the red stick
+    vertical_distance = ring_center[2] - stick_center[2] - 0.1  # 10 cm above
+    horizontal_distance = np.linalg.norm(ring_center[:2] - stick_center[:2])
+
+    if abs(vertical_distance) < 0.01 and horizontal_distance < 0.01:
+        return 3  # Proceed to stage 3
+    else:
+        return 2  # Repeat stage 2
+

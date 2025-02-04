@@ -1,0 +1,40 @@
+def stage_2_path_constraint1():
+    """constraints: <"path constraints", "the center of the gripper of the robot", "the center of the body of the red faucet", "the center of the gripper of the robot remains at the same distance from the center of the body of the red faucet">"""
+    mask1 = segment("the center of the gripper of the robot", -1)  # Current gripper center
+    mask2 = segment("the center of the body of the red faucet", -1)  # Current faucet center
+
+    if mask1.shape[-1] == 3:
+        pc1 = mask1
+        pc2 = mask2
+    else:
+        pc1 = mask_to_pc(mask1)
+        pc2 = mask_to_pc(mask2)
+
+    # Compute the center of the gripper and the center of the faucet
+    gripper_center = np.mean(pc1, axis=0)
+    faucet_center = np.mean(pc2, axis=0)
+
+    # Calculate the distance between the gripper and the faucet
+    distance = np.linalg.norm(gripper_center - faucet_center)
+
+    # The cost is based on how much the distance deviates from the initial distance
+    initial_mask1 = segment("the center of the gripper of the robot", -2)  # Initial gripper center
+    initial_mask2 = segment("the center of the body of the red faucet", -2)  # Initial faucet center
+
+    if initial_mask1.shape[-1] == 3:
+        initial_pc1 = initial_mask1
+        initial_pc2 = initial_mask2
+    else:
+        initial_pc1 = mask_to_pc(initial_mask1)
+        initial_pc2 = mask_to_pc(initial_mask2)
+
+    initial_gripper_center = np.mean(initial_pc1, axis=0)
+    initial_faucet_center = np.mean(initial_pc2, axis=0)
+
+    initial_distance = np.linalg.norm(initial_gripper_center - initial_faucet_center)
+
+    # The cost is the absolute difference between the current and initial distances
+    cost = abs(distance - initial_distance)
+    
+    return cost
+
