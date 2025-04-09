@@ -4,7 +4,6 @@ import open3d as o3d
 from scipy.spatial.transform import Rotation as R
 from utils import *
 import cv2
-import env
 import argparse
 import yaml
 import utils.builder as builder
@@ -14,12 +13,14 @@ from pipelines import *
 from generator import *
 from perception import *
 from envs import *
+from equipments import *
+from large_models import *
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", type=str, default="Pour water from the red cup to the grey bowl")
 parser.add_argument("--task_dir", type=str, default="vlm_query/pour_water_from_red_cup_to_grey_bowl")
-parser.add_argument("--config_path", type=str, default="configs/geomanip_config_metaworld.yaml")
+parser.add_argument("--config_path", type=str, default="configs/geomanip_config_realworld_improved.yaml")
 parser.add_argument("--device", type=str, default="mps")
 args = parser.parse_args()
 

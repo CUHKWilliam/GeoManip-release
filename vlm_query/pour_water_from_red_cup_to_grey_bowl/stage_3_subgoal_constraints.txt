@@ -1,0 +1,30 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the area of the handle of the red cup", "the normal of the handle of the red cup", "the area of the handle of the red cup rotates around the normal of the handle of the red cup by 45 degrees"> """
+    pc1 = get_point_cloud("the handle of the red cup", -1)
+    pc1_previous = get_point_cloud("the handle of the red cup", -2)
+
+    # Calculate the normal of the handle
+    covariance_matrix_handle = np.cov(pc1_previous.T)
+    eigenvalues_handle, eigenvectors_handle = np.linalg.eig(covariance_matrix_handle)
+    handle_normal = eigenvectors_handle[:, np.argmin(eigenvalues_handle)]
+    if handle_normal[np.argmax(np.abs(handle_normal))] < 0:
+        handle_normal = -handle_normal
+    handle_normal = handle_normal / np.linalg.norm(handle_normal)
+
+    # Convert the angle from degrees to radians
+    angle_radians = np.radians(45)
+
+    # Compute the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -handle_normal[2], handle_normal[1]],
+                  [handle_normal[2], 0, -handle_normal[0]],
+                  [-handle_normal[1], handle_normal[0], 0]])
+    I = np.eye(3)
+    rotation_matrix = I + np.sin(angle_radians) * K + (1 - np.cos(angle_radians)) * np.dot(K, K)
+
+    # Rotate each point in pc1_previous
+    rotated_pc1 = np.dot(pc1_previous - np.mean(pc1_previous, axis=0), rotation_matrix.T) + np.mean(pc1_previous, axis=0)
+
+    # Compute the cost of how pc1 aligns with rotated_pc1
+    cost = np.linalg.norm(pc1 - rotated_pc1, axis=1).sum()
+    return cost
+

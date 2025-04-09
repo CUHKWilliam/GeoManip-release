@@ -1,17 +1,13 @@
 import numpy as np
 import open3d as o3d
 import os
-import env
 import cv2
 from scipy.spatial.transform import Rotation as R
 import subprocess
 import utils.transform_utils as T
-import env
 import copy
 from numba import njit
 import time
-from vllm import LLM, SamplingParams
-from transformers import AutoProcessor
 from PIL import Image
 import os
 import numpy as np
@@ -243,80 +239,8 @@ def sample_from_spline(spline, num_samples):
         samples = np.array(samples).T  # [num_samples, spline_dim]
     return samples
 
+   
 
-def query_vlm_model_api(client, model, messages, temperature, top_p, stream=False):
-    if "o1" not in model:
-        completion = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                top_p=top_p,
-                stream=stream
-            )
-    else:
-        completion = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                stream=stream
-            )
-    if not stream:
-        reply = completion.choices[0].message.content
-        return reply
-    else:
-        output = ""
-        start = time.time()
-        for chunk in completion:
-            print(f'[{time.time()-start:.2f}s] Querying OpenAI API...', end='\r')
-            if chunk.choices[0].delta.content is not None:
-                output += chunk.choices[0].delta.content
-        print(f'[{time.time()-start:.2f}s] Querying OpenAI API...Done')
-        return output
-
-llm = None
-def query_vlm_model_local(client, model, messages, temperature, top_p, stream=False):
-
-    MODEL_PATH = "Qwen/Qwen2.5-VL-3B-Instruct"
-    global llm
-    if llm is None:
-        llm = LLM(
-            model=MODEL_PATH,
-            limit_mm_per_prompt={"image": 10, "video": 10},
-        )
-        processor = AutoProcessor.from_pretrained(MODEL_PATH)
-
-    sampling_params = SamplingParams(
-        temperature=0.1,
-        top_p=0.001,
-        repetition_penalty=1.05,
-        max_tokens=256,
-        stop_token_ids=[],
-    )    
-    prompt = processor.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-    image_inputs, video_inputs, video_kwargs = process_vision_info(messages, return_video_kwargs=True)
-
-    mm_data = {}
-    if image_inputs is not None:
-        mm_data["image"] = image_inputs
-    if video_inputs is not None:
-        mm_data["video"] = video_inputs
-
-    llm_inputs = {
-        "prompt": prompt,
-        "multi_modal_data": mm_data,
-        "mm_processor_kwargs": video_kwargs,
-    }
-
-    outputs = llm.generate([llm_inputs], sampling_params=sampling_params)
-    generated_text = outputs[0].outputs[0].text
-
-    return generated_text
-
-
-query_vlm_model = query_vlm_model_api
 
 def draw_arrow(pcd, start, end, color=np.array([1, 1, 0])):
     pts = np.linspace(start, end, num=50)
@@ -1105,3 +1029,49 @@ def transform_geometry(transform, a_part_to_pts_dict_, moving_part_names, pos_on
             part_pts = a_part_to_pts_dict[part_name]
             a_part_to_pts_dict[part_name] = part_pts + transform[:3, 3]
     return a_part_to_pts_dict
+
+def rotation_vector_to_quaternion(rxyz):
+    """
+    将旋转向量转换为四元数
+    :param rx, ry, rz: 旋转向量
+    :return: 四元数 [w, x, y, z]
+    """
+
+    rx, ry, rz = rxyz
+    rotation_vector = np.array([rx, ry, rz])
+    theta = np.linalg.norm(rotation_vector)  # 旋转角度
+    if theta < 1e-6:  # 避免除以零
+        return np.array([1.0, 0.0, 0.0, 0.0])  # 无旋转，返回单位四元数
+
+    axis = rotation_vector / theta  # 旋转轴
+    half_theta = theta / 2.0
+    w = np.cos(half_theta)
+    x, y, z = axis * np.sin(half_theta)
+
+    return np.array([x, y, z, w])
+
+def euler_to_rotation_vector(angle):
+    quat = R.from_euler("XYZ",angle).as_quat()
+    rotvec = quaternion_to_rotation_vector(quat)
+    return rotvec
+
+
+def quaternion_to_rotation_vector(q):
+    """
+    将四元数转换为旋转向量
+    :param q: 四元数 [w, x, y, z]
+    :return: 旋转向量 [rx, ry, rz]
+    """
+    # w, x, y, z = q
+    x, y, z, w = q 
+    if abs(w) > 1.0:  # 确保四元数归一化
+        q = q / np.linalg.norm(q)
+        w, x, y, z = q
+
+    theta = 2 * np.arccos(w)  # 旋转角度
+    if theta < 1e-6:  # 无旋转
+        return np.array([0.0, 0.0, 0.0])
+
+    axis = np.array([x, y, z]) / np.sin(theta / 2.0)  # 旋转轴
+    rotation_vector = theta * axis
+    return rotation_vector

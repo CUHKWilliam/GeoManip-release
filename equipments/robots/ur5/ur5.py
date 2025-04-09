@@ -1,3 +1,5 @@
+DEBUG = True
+
 from utils.registry import ROBOTS
 from ..robot_base import RobotBase
 #=====================#
@@ -5,29 +7,35 @@ from ..robot_base import RobotBase
 #=====================#
 
 import sys
-
-from rtde_control import RTDEControlInterface as RTDEControl
-from rtde_receive import RTDEReceiveInterface as RTDEReceive
+if not DEBUG:
+    from rtde_control import RTDEControlInterface as RTDEControl
+    from rtde_receive import RTDEReceiveInterface as RTDEReceive
 import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from utils.geometry_utils import get_transformation_matrix, rotation_vector_to_quaternion
+from utils.utils import rotation_vector_to_quaternion
 from .gripper import Gripper
 import pickle
+from utils.utils import euler_to_rotation_vector
 
 @ROBOTS.register_module()
-class URRobot(RobotBase):
+class UR5Robot(RobotBase):
+
     def __init__(self, config, ):
+        self.gripper_state = 0
+        self.config = config
+        self.approach0, self.binormal0 = np.array(config['approach0']), np.array(config['binormal0'])
+
+        if DEBUG:
+            return
+        
         self.UR_control_ID = config["UR_control_ID"]
         self.UR_receive_ID = config['UR_receive_ID']
-        self.approach0, self.binormal0 = config['UR_approach0'], config['UR_binormal0']
-        self.eef_to_grasp_dist = config['eefto_grasp_dist']
+        self.eef_to_grasp_dist = config['eef_to_grasp_dist']
         self.rtde_init()
         self.soft_gripper = Gripper()
-        self.dz = 0.12
         ## TODO: home position
         self.move_to_point(np.array(config['UR_robot_home_pose']))
-        self.gripper_state = 0
 
     def rtde_init(self):
         self.rtde_c = RTDEControl(self.UR_control_ID)
@@ -38,6 +46,8 @@ class URRobot(RobotBase):
         return self.rtde_r.getActualQ()
     
     def get_end_pose(self):
+        if DEBUG:
+            return np.array([0., 0, 0., 0, 0, 0])
         # end pose in base frame bTe
         return self.rtde_r.getActualTCPPose()
 
@@ -45,21 +55,40 @@ class URRobot(RobotBase):
         return self.gripper_state
     
    #==== set ur cmd through rtde
-    def move_to_point(self, tar, v=0.1, a=0.1):
+    def move_to_point(self, tar, v=0.1, a=0.1, transition=False):
+        if DEBUG:
+            return
         # moveL in the base frame
-        self.rtde_c.moveL(tar, v, a)
+        if not transition:
+            self.rtde_c.moveL(tar, v, a)
+        else:
+            tar_rot = euler_to_rotation_vector(R.from_quat(self.get_current_pose()[1]).as_euler("XYZ"))
+            tar = np.concatenate([tar, tar_rot])
+            self.rtde_c.moveL(tar, v, a)
 
     def grasp(self,):
+        if DEBUG:
+            return
         self.soft_gripper.gripper_close()
         self.gripper_state = 1
 
     def release(self, ):
+        if DEBUG:
+            return
         self.soft_gripper.gripper_open()
         self.gripper_state = 0
 
     def get_current_pose(self,):
+        if DEBUG:
+            return np.array([0., 0, 0.]), np.array([0,  0, 0, 1])
         # Stop the RTDE control script
         current_pose = self.get_end_pose()
         current_pos = current_pose[:3]
         current_quat = rotation_vector_to_quaternion(current_pose[3:])
         return current_pos, current_quat
+    
+    def get_current_approach(self,):
+        return R.from_quat(self.get_current_pose()[1]).as_matrix() @ self.config['approach0']
+    
+    def get_current_binormal(self,):
+        return R.from_quat(self.get_current_pose()[1]).as_matrix() @ self.config['binormal0']

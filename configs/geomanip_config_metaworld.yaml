@@ -24,6 +24,10 @@ pipeline:
         vlm_model: *vlm_model
         temperature: 0.8
         top_p: 0.5
+    graspper:
+      type: "gpd"
+      config:
+        
 
     perception:
       type: GeometryParser

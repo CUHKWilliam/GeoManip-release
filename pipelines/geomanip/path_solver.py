@@ -111,7 +111,7 @@ def objective(  opt_vars,
     delta_cost = 0
     for i, pose in enumerate(poses_homo[start_idx:end_idx]):
         ## transform part_to_pts_dict_3d
-        transformed_part_to_pts_dict_3d = transform_geometry(pose, part_to_pts_dict_3d_centered, moving_part_names, pos_only=pos_only)
+        transformed_part_to_pts_dict_3d = transform_geometry(env,pose, part_to_pts_dict_3d_centered, moving_part_names, pos_only=pos_only)
         env.part_to_pts_dict_simulation = copy.deepcopy(transformed_part_to_pts_dict_3d)
             
         # if occlusion_func is not None:
@@ -160,6 +160,8 @@ class PathSolver:
         self.last_opt_result = None
         # warmup
         # self._warmup()
+        self.ik_solver = None
+        self.reset_joint_pos = None
 
     def _warmup(self):
         start_pose = np.array([0.0, 0.0, 0.3, 0, 0, 0, 1])
@@ -196,18 +198,18 @@ class PathSolver:
                 opt_result.message += f'; path constraint not satisfied'
         return opt_result
 
-    def _center_collision_points_and_keypoints(self, ee_pose, collision_points, keypoints, keypoint_movable_mask):
+    def _center_collision_points_and_keypoints(self, env, ee_pose, collision_points, keypoints, keypoint_movable_mask):
         ee_pose_homo = T.pose2mat([ee_pose[:3], T.euler2quat(ee_pose[3:])])
         centering_transform = np.linalg.inv(ee_pose_homo)
         collision_points_centered = np.dot(collision_points, centering_transform[:3, :3].T) + centering_transform[:3, 3]
-        keypoints_centered = transform_keypoints(centering_transform, keypoints, keypoint_movable_mask)
+        keypoints_centered = transform_keypoints(env, centering_transform, keypoints, keypoint_movable_mask)
         return collision_points_centered, keypoints_centered
 
     
     def solve(self,
+            env,
             start_pose,
             end_pose,
-            env,
             part_to_pts_dict_3d,
             moving_part_names,
             path_constraints,
@@ -291,6 +293,7 @@ class PathSolver:
         # ====================================
         part_to_pts_dict_3d_centered = _center_geometry(start_pose, part_to_pts_dict_3d, moving_part_names, pos_only=pos_only)
         aux_args = (og_bounds,
+                    env,
                     start_pose,
                     end_pose,
                     part_to_pts_dict_3d_centered,
@@ -311,11 +314,9 @@ class PathSolver:
         # ====================================
         start = time.time()
         # use global optimization for the first iteration
-        import ipdb;ipdb.set_trace()
         if from_scratch:
             opt_result = dual_annealing(
                 func=objective,
-                env=env,
                 bounds=bounds,
                 args=aux_args,
                 maxfun=self.config['sampling_maxfun'],
@@ -330,7 +331,6 @@ class PathSolver:
         else:
             opt_result = minimize(
                 fun=objective,
-                env=env,
                 x0=init_sol,
                 args=aux_args,
                 bounds=bounds,
@@ -365,6 +365,7 @@ class PathSolver:
 
 
     def solve_with_collision_avoidance(self,
+                env, 
                 start_pose,
                 end_pose,
                 part_to_pts_dict_3d,
@@ -422,7 +423,7 @@ class PathSolver:
                     pose_quat = poses_quat[i]
                     pose_homo = T.convert_pose_quat2mat(pose_quat)
                     pose_euler = T.convert_pose_quat2euler(pose_quat)
-                    transformed_part_to_pts_dict_3d = transform_geometry(pose_homo, part_to_pts_dict_3d_centered, moving_part_names)
+                    transformed_part_to_pts_dict_3d = transform_geometry(env, pose_homo, part_to_pts_dict_3d_centered, moving_part_names)
                     env.part_to_pts_dict_simulation = copy.deepcopy(transformed_part_to_pts_dict_3d)
                     env.video_tmp = []
                     collision_cost = get_collision_cost(transformed_part_to_pts_dict_3d, moving_part_names, occlusion_func)

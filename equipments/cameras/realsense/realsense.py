@@ -4,8 +4,11 @@ import cv2
 import open3d as o3d
 import os
 from ..camera_base import CameraBase
+from utils.registry import CAMERAS
+DEBUG = True
 
-class Realsense(CameraBase):
+@CAMERAS.register_module()
+class RealSense(CameraBase):
     def __init__(self, config):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
@@ -15,11 +18,8 @@ class Realsense(CameraBase):
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, 30)  
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, 30)   
         self.align = rs.align(rs.stream.color)
-        self.start()
-        ## TODO:
-        self.EXTRINSIC = np.array([[-0.18746593, 0.51792903,-0.83462929, 0.38557143],
-                [ 0.98110535, 0.14011352,-0.13341847, 0.49040391],
-                [ 0.04784155,-0.84387068,-0.53440945, 0.38047709]])
+        if not DEBUG:
+            self.start()
         
     def start(self):
         self.profile = self.pipeline.start(self.config)
@@ -43,7 +43,9 @@ class Realsense(CameraBase):
         rgb = color_image[...,::-1]
         return rgb
     
-    def update_frames(self):
+    def update_frames(self, mask=None):
+        if DEBUG:
+            return np.zeros((100, 100, 3)).astype(np.uint8), np.zeros((100, 100)).astype(np.float32), np.zeros((10000, 3)).astype(np.float32)
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
@@ -53,8 +55,6 @@ class Realsense(CameraBase):
         color_image = np.asanyarray(color_frame.get_data())
         color_image = color_image[:, :, ::-1]
         rgb = color_image
-
-
         pc = rs.pointcloud()
         points = pc.calculate(depth_frame)
         pc.map_to(color_frame)
@@ -72,12 +72,15 @@ class Realsense(CameraBase):
         image_Points = np.reshape(vertices , (-1,w,3))
 
         point_cloud = o3d.geometry.PointCloud()
-        point_cloud.points = o3d.utility.Vector3dVector(image_Points.reshape(-1,3))
-        point_cloud.colors = o3d.utility.Vector3dVector(rgb.reshape(-1,3) / 255.0)
-        return color_image, image_points, point_cloud
+        if mask is None:
+            return color_image, depth_image, image_Points.reshape(-1,3)
+        else:
+            return color_image[mask], depth_image[mask], image_Points[mask].reshape(-1,3)
     
     
     def update_image_depth(self):
+        if DEBUG:
+            return np.zeros((128, 128, 3)).astype(np.uint8), None
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()

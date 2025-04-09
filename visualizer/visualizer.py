@@ -3,9 +3,8 @@ import numpy as np
 import matplotlib
 import cv2
 import utils.transform_utils as T
-from utils.utils import filter_points_by_bounds, batch_transform_points
+from utils.utils import filter_points_by_bounds, batch_transform_points, draw_arrow
 from scipy.spatial.transform import Rotation as R
-import env
 from utils.registry import VISUALIZERS
 
 def add_to_visualize_buffer(visualize_buffer, visualize_points, visualize_colors):
@@ -49,7 +48,7 @@ class SubgoalPathVisualizer:
         print('showing image, click on the window and press "ESC" to close and continue')
         cv2.destroyAllWindows()
     
-    def show_pointcloud(self, points, colors, subgoal_pose_homos, save=None, return_pcd=False):
+    def show_pointcloud(self, env, points, colors, subgoal_pose_homos, save=None, return_pcd=False):
         # transform to viewer frame
         # points = np.dot(points, self.world2viewer[:3, :3].T) + self.world2viewer[:3, 3]
         # clip color to [0, 1]
@@ -60,34 +59,22 @@ class SubgoalPathVisualizer:
         for subgoal_pose_homo in subgoal_pose_homos:
             start = subgoal_pose_homo[:3, -1]
             R, pos = subgoal_pose_homo[:3, :3], subgoal_pose_homo[:3, -1]
-            end = np.dot(self.env.APPROACH0 * 0.3, R.T) + pos
-            pcd = utils.draw_arrow(pcd, start, end, np.array([1, 0, 0]))
-            end = np.dot(self.env.BINORMAL0 * 0.05, R.T) + pos
-            pcd = utils.draw_arrow(pcd, start, end, np.array([0, 1, 0]))
+            end = np.dot(env.robot.approach0 * 0.3, R.T) + pos
+            pcd = draw_arrow(pcd, start, end, np.array([1, 0, 0]))
+            end = np.dot(env.robot.binormal0 * 0.05, R.T) + pos
+            pcd = draw_arrow(pcd, start, end, np.array([0, 1, 0]))
         o3d.io.write_point_cloud(save, pcd)
         if return_pcd:
             return np.asarray(pcd.points), np.asarray(pcd.colors)
 
-    def _get_scene_points_and_colors(self):
+    def _get_scene_points_and_colors(self, env):
         # scene
-        cam_obs = self.env.last_cam_obs
         scene_points = []
         scene_colors = []
-        for cam_id in range(len(cam_obs)):
-            cam_id = 1
-            cam_points = cam_obs[cam_id]['points'].reshape(-1, 3)
-            cam_colors = cam_obs[cam_id]['rgb'].reshape(-1, 3) / 255.0
-            # clip to workspace
-            within_workspace_mask = filter_points_by_bounds(cam_points, self.bounds_min, self.bounds_max, strict=False)
-            cam_points = cam_points[within_workspace_mask]
-            cam_colors = cam_colors[within_workspace_mask]
-            scene_points.append(cam_points)
-            scene_colors.append(cam_colors)
-        scene_points = np.concatenate(scene_points, axis=0)
-        scene_colors = np.concatenate(scene_colors, axis=0)
-        return scene_points, scene_colors
+        rgb, _, pcs = env.camera.update_frames()
+        return pcs, rgb.reshape(-1, 3)
 
-    def visualize_subgoal(self, subgoal_pose, moving_part_names):
+    def visualize_subgoal(self, env, subgoal_pose, moving_part_names):
         if subgoal_pose is None or len(subgoal_pose) == 0:
             return
         visualize_buffer = {
@@ -95,11 +82,11 @@ class SubgoalPathVisualizer:
             "colors": []
         }
         # scene
-        scene_pcd = env.get_point_cloud()
+        rgb, _, pcs = env.camera.update_frames()
         subgoal_pose_homo = T.convert_pose_quat2mat(subgoal_pose)
-        self.show_pointcloud(np.asarray(scene_pcd.points), np.asarray(scene_pcd.colors), subgoal_pose_homo[None, ...], "debug.ply")
+        self.show_pointcloud(env, pcs, rgb.reshape(-1, 3), subgoal_pose_homo[None, ...], self.config['ply_save_path'])
 
-    def visualize_path(self, path, save_path="debug.ply", return_pcd=False):
+    def visualize_path(self, env, path, save_path="debug.ply", return_pcd=False):
         if path is None:
             return
         if isinstance(path, list):
@@ -109,7 +96,7 @@ class SubgoalPathVisualizer:
             "colors": []
         }
         # scene
-        scene_points, scene_colors = self._get_scene_points_and_colors()
+        scene_points, scene_colors = self._get_scene_points_and_colors(env, )
         add_to_visualize_buffer(visualize_buffer, scene_points, scene_colors)
         # draw curve based on poses
         for t in range(len(path) - 1):
@@ -134,29 +121,9 @@ class SubgoalPathVisualizer:
         path = np.array(subpath)
         path_length = path.shape[0]
         # path points
-        moving_part_names = self.env.get_moving_part_names()
-        if len(moving_part_names) == 0:
-            print("empty moving part")
-            return
-        part_to_pts_dict = self.env.get_part_to_pts_dict()[-1]
-        part_points = []
-        for part_name in moving_part_names:
-            part_points.append(part_to_pts_dict[part_name])
-        start_pose = self.env.previous_pose
-        if len(start_pose) == 3:
-            start_pose = R.from_euler("ZYX", start_pose).as_quat()
-        
-        part_points = np.concatenate(part_points, axis=0)
-        num_points = part_points.shape[0]
-        centering_transform = np.linalg.inv(T.convert_pose_quat2mat(start_pose))
-        part_points_centered = np.dot(part_points, centering_transform[:3, :3].T) + centering_transform[:3, 3]
+
         poses_homo = T.convert_pose_quat2mat(path[:, :7])
-        transformed_part_points = batch_transform_points(part_points_centered, poses_homo).reshape(-1, 3)
-        part_points_colors = np.array([[0, 255, 0]] * len(transformed_part_points))
-        add_to_visualize_buffer(visualize_buffer, transformed_part_points, part_points_colors)
-        visualize_points = np.concatenate(visualize_buffer["points"], axis=0)
-        visualize_colors = np.concatenate(visualize_buffer["colors"], axis=0)
-        return self.show_pointcloud(visualize_points, visualize_colors, poses_homo, save_path, return_pcd)
+        return self.show_pointcloud(env, scene_points, scene_colors, poses_homo, self.config['ply_save_path'], return_pcd)
     
 @VISUALIZERS.register_module()
 class ImageVisualizer:

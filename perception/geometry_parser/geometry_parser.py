@@ -1,3 +1,4 @@
+## TODO: Not done !!!!!
 import numpy as np
 import cv2
 import torch
@@ -9,7 +10,6 @@ from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 import os
 from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 from PIL import Image
-from utils.utils import query_vlm_model
 from tqdm import tqdm
 from multiprocessing import Pool
 import scipy
@@ -39,8 +39,7 @@ class GeometryParser(PerceptionBase):
         )
 
         ## GroundingDINO
-        self.grounding_dino_model = load_model(config['grounding_dino_config_path'], config['grounding_dino_weight_path'])
-        
+        self.grounding_dino_model = load_model(config['grounding_dino_config_path'], config['grounding_dino_weight_path'])        
         ## Qwen
         self.client = OpenAI(api_key=config['vlm_api_key'], base_url=config['vlm_base_url'])
         self.vlm_model = config['vlm_model']

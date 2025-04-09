@@ -1,4 +1,6 @@
 import inspect
+import numpy as np
+
 
 class Registry:
     _registry_instances = {}
@@ -36,6 +38,8 @@ class Registry:
                     f'type must be a str or valid type, but got {type(obj_type)}')
             cls = obj_cls(args)
             for k in args.keys():
+                if isinstance(args[k], list):
+                    args[k] = np.array(args[k])
                 setattr(cls, k, args[k])
             return cls
         else:

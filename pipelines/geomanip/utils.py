@@ -2,6 +2,13 @@ import numpy as np
 from numba import njit
 import utils.transform_utils as T
 import copy
+import open3d as o3d
+import os
+from utils.utils import exec_safe
+from scipy.spatial.transform import Slerp
+from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import RotationSpline
+
 
 def _center_geometry(ee_pose, part_to_pts_dict_3d_original, moving_part_names, pos_only=False):
     part_to_pts_dict_3d = copy.deepcopy(part_to_pts_dict_3d_original)
@@ -28,10 +35,10 @@ def transform_keypoints(transform, keypoints, movable_mask):
     if movable_mask.sum() > 0:
         transformed_keypoints[movable_mask] = np.dot(keypoints[movable_mask], transform[:3, :3].T) + transform[:3, 3]
     return transformed_keypoints
-def transform_geometry(transform, part_pts_dict, moving_part_names, pos_only=False):
+def transform_geometry(env, transform, part_pts_dict, moving_part_names, pos_only=False):
     import utils
     part_pts_dict_latest = copy.deepcopy(part_pts_dict[-1])
-    part_pts_dict2 = copy.deepcopy(utils.ENV.part_to_pts_dict)
+    part_pts_dict2 = copy.deepcopy(env.part_to_pts_dict)
     for part_name in part_pts_dict_latest.keys():
         if part_name in moving_part_names:
             part_pts = part_pts_dict_latest[part_name]
@@ -292,3 +299,53 @@ def get_linear_interpolation_steps(start_pose, end_pose, pos_step_size, rot_step
     num_path_poses = int(max(pos_num_steps, rot_num_steps))
     num_path_poses = max(num_path_poses, 2)  # at least start and end poses
     return num_path_poses
+
+
+def load_a_cost_functions(txt_path, functions_dict):
+
+    if txt_path is None:
+        return []
+    # load txt file
+    with open(txt_path, 'r') as f:
+        functions_text = f.read()
+    # execute functions
+    gvars_dict = {
+        'np': np,
+    }  # external library APIs
+    gvars_dict.update(functions_dict)
+    lvars_dict = dict()
+    exec_safe(functions_text, gvars=gvars_dict, lvars=lvars_dict)
+    if "__doc__" in lvars_dict.keys():
+        lvars_dict.pop("__doc__")
+    funcs = list(lvars_dict.values())
+    return funcs, functions_text
+
+
+def load_cost_functions(cost_function_path, pipeline):
+    functions_dict = {
+        "grasp": pipeline.grasp_wrapper(),
+        "o3d": o3d,
+        "np": np,
+        "get_point_cloud": pipeline.environment.get_point_cloud_with_timestamp_wrapper(),
+        "release": pipeline.release_wrapper(),
+    }
+    constraint_fns, constraint_fns_code = {}, {}
+    for stage in range(1, 100):  # stage starts with 1
+        stage_dict = dict()
+        stage_dict_code = dict()
+        flag_exist = False
+        for constraint_type in ['subgoal', 'path', 'flow']:
+            load_path = os.path.join(cost_function_path, f'stage_{stage}_{constraint_type}_constraints.txt')
+            if not os.path.exists(load_path):
+                func, code = [], []
+            else:
+                flag_exist = True
+                func, code = load_a_cost_functions(load_path, functions_dict) 
+            ## merge the target constraints and the sub-goal constraint
+            stage_dict[constraint_type] = func
+            stage_dict_code[constraint_type] = code
+        if not flag_exist:
+            break
+        constraint_fns[stage] = stage_dict
+        constraint_fns_code[stage] = stage_dict_code
+    return constraint_fns, constraint_fns_code

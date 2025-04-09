@@ -1,0 +1,29 @@
+### Task Decomposition
+
+The task "Pour water from the red cup to the grey bowl" can be broken down into the following stages:
+
+1. **Grasp the red cup**
+2. **Align the red cup with the grey bowl**
+3. **Tilt the red cup to pour water into the grey bowl**
+4. **Place the red cup back on the table**
+5. **Release the red cup**
+
+### Geometric Constraint Generation
+
+#### Stage 1: Grasp the red cup
+- <"grasp", "the handle of the red cup">
+- <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+
+#### Stage 2: Align the red cup with the grey bowl
+- <"sub-goal constraints", "the center of the opening of the red cup", "the center of the body of the grey bowl", "the center of the opening of the red cup is directly above the center of the body of the grey bowl by around 10 centimeters">
+
+#### Stage 3: Tilt the red cup to pour water into the grey bowl
+- <"sub-goal constraints", "the area of the handle of the red cup", "the normal of the handle of the red cup", "the area of the handle of the red cup rotates around the normal of the handle of the red cup by 45 degrees">
+- <"path constraints", "the center of the opening of the red cup", "the center of the body of the grey bowl", "the distance between the center of the opening of the red cup and the center of the body of the grey bowl remains around 10 centimeters">
+
+#### Stage 4: Place the red cup back on the table
+- <"sub-goal constraints", "the surface of the table", "the center of the bottom of the red cup", "the center of the bottom of the red cup is above the surface of the table by 0 cm">
+- <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+
+#### Stage 5: Release the red cup
+- <"release">

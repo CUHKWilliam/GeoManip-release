@@ -8,7 +8,6 @@ llm_api_key: &llm_api_key "sk-6cf616fbddf74b7ab8e79f8f764c4957"
 llm_base_url: &llm_base_url "https://api.deepseek.com"
 llm_model: &llm_model "deepseek-chat"
 
-
 pipeline:
   type: GeomanipPipeline
   config:
@@ -16,35 +15,43 @@ pipeline:
       type: GeometricAndCodeGenerator
       config:
         prompt_dir: *prompt_dir
-        llm_api_key: *llm_api_key
-        llm_base_url: *llm_base_url
-        llm_model: *llm_model
-        vlm_api_key: *vlm_api_key
-        vlm_base_url: *vlm_base_url
-        vlm_model: *vlm_model
-        temperature: 0.8
-        top_p: 0.5
+        cost_fns_queryer:
+          type: WebQueryer
+          config:
+            api_key: *llm_api_key
+            base_url: *llm_base_url
+            model: *llm_model
+            temperature: 0.8
+            top_p: 0.5
+        constraint_generator_queryer:
+          type: WebQueryer
+          config:
+            api_key: *vlm_api_key
+            base_url: *vlm_base_url
+            model: *vlm_model
+            temperature: 0.8
+            top_p: 0.5
+    grasper:
+      type: "NaiveGrasper"
+      config:
+        pregrasp_approach_offset: 0.2
+        grasp_approach_offset: 0.05
 
     perception:
-      type: GeometryParser
+      type: GeometryParserMatcher
       config:
         promt_dir: *prompt_dir
-        box_threshold: 0.05
-        text_threshold: 0.2
+        mask_selector:
         filter_ratio: 0.1
         margin: 5
-        temperature: 0.1
-        top_p: 0.1
-        vlm_api_key: *vlm_api_key
-        vlm_base_url: *vlm_base_url
-        vlm_model: *vlm_model
-        sam_weight_path: "./sam_vit_h_4b8939.pth"
-        grounding_dino_weight_path: "GroundingDino/weights/groundingdino_swint_ogc.pth"
-        grounding_dino_config_path: "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
-        visualizer:
-          type: ImageVisualizer
-          config:
-            no_use: 
+        backbone: "swin"
+        database_root: "./database/"
+        feature_extractor_path: "./saved_pretrained/swin_base_patch4_window12_384_22kto1k.pth"
+        matcher_checkpoint_path: "./saved_pretrained/matcher_swin.pt"
+        img_mean: [0.485, 0.456, 0.406]
+        img_std: [0.229, 0.224, 0.225]
+        img_size: 384
+        
 
     path_solver:
       type: PathSolver
@@ -61,8 +68,7 @@ pipeline:
         interpolate_pos_step_size: 0.05
         interpolate_rot_step_size: 0.34
         minimizer_options:
-          maxiter: 50
-
+          maxiter: 10
     subgoal_solver:
       type: SubgoalSolver
       config:
@@ -85,6 +91,7 @@ pipeline:
       config:
         bounds_min: *bounds_min
         bounds_max: *bounds_max
+        ply_save_path: "./debug.ply"
 
     environment:
       type: RealWorldEnv
@@ -98,6 +105,9 @@ pipeline:
             UR_robot_ID: 50001
             UR_robot_port: 30002
             UR_robot_home_pose: [0, 0.5, 0.4, 3.1415, 0, 0]
+            approach0: [0, 0, 1]
+            binormal0: [0, 1, 0]
+            eef_to_grasp_dist: 0.1
         camera:
           type: RealSense
           config:

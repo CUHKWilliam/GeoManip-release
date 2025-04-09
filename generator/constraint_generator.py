@@ -6,7 +6,6 @@ import json
 import numpy as np
 import time
 from datetime import datetime
-from utils.utils import query_vlm_model
 import parse
 from utils.utils import encode_image
 from utils.registry import GENERATORS
@@ -64,18 +63,6 @@ def parse_and_save_cost_fns(output, save_dir):
 class GeometricAndCodeGenerator:
     def __init__(self, config):
         prompt_dir = config['prompt_dir']
-        ## working, but slow
-        llm_api_key = config['llm_api_key']
-        llm_base_url = config['llm_base_url']
-        llm_model = config['llm_model']
-        self.cost_fns_client = OpenAI(api_key=llm_api_key, base_url=llm_base_url)
-        self.cost_fns_vlm_model = llm_model
-
-        self.task_decomposition_client = OpenAI(api_key=config['vlm_api_key'], base_url=config['vlm_base_url'])
-        self.task_decomposition_vlm_model = config['vlm_model']
-
-        self.temperature = config['temperature']
-        self.top_p = config['top_p']
 
         self.geometry_constraints_scheme_prompt = open(os.path.join(prompt_dir, 'geometry_constraints_scheme_prompt.txt'), "r").read()
         self.geometry_constraints_example_prompt = open(os.path.join(prompt_dir, 'geometry_constraints_example_prompt.txt'), "r").read()
@@ -192,7 +179,7 @@ class GeometricAndCodeGenerator:
         self.task_dir = task_dir
         if not os.path.exists(output_constraint_file) or overwrite:
             # stream back the response
-            output = query_vlm_model(self.task_decomposition_client, self.task_decomposition_vlm_model, self.query_history, self.temperature, self.top_p, stream=True)
+            output = self.constraint_generator_queryer.query(self.query_history, stream=True)
             with open(output_constraint_file, "w") as f:
                 f.write(output)
         else:
@@ -204,21 +191,11 @@ class GeometricAndCodeGenerator:
         )
     
     def cost_fns_generation(self, task_dir=None, overwrite=False):
-        ## TODO: need to implement these interface 
-        # fns_dict = {
-        #     "grasp": grasp,
-        #     "release": release,
-        #     "env": env,
-        #     "cv2": cv2,
-        #     "subprocess": subprocess,
-        #     "get_point_cloud": get_point_cloud,
-        # }
-        fns_dict = {}
         prompt = self.build_prompt_cost_functions()
         self.query_history.append(prompt)
         output_cost_file = os.path.join(task_dir, "output_cost_functions.txt")
         if not os.path.exists(output_cost_file) or overwrite:
-            output = query_vlm_model(self.cost_fns_client, self.cost_fns_vlm_model, self.query_history, self.temperature, self.top_p, stream=True)
+            output = self.cost_fns_queryer.query(self.query_history, stream=True)
             self.query_history.append(
                 {"role": "system", "content": "{}".format(output)}
             )

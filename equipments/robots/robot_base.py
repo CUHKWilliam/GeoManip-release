@@ -3,7 +3,6 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from utils import *
-from gripper_util import Gripper
 
 class RobotBase():
     def __init__(self, config):

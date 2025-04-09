@@ -3,4 +3,7 @@
 *.npy
 *.json
 *__pycache__*
-
+*.png
+*.jpeg
+gpd2/*
+saved_pretrained/*

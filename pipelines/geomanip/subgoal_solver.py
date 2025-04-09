@@ -14,7 +14,6 @@ from scipy.spatial.transform import Rotation as R
 hist_cost = 1e10
 opt_pose_global = None
 from pipelines.geomanip.path_solver import get_collision_cost
-import env
 from utils.registry import SOLVERS
 
 def objective(opt_vars,
@@ -96,7 +95,7 @@ def objective(opt_vars,
         for part_name in transformed_part_to_pts_dict_3d_latest.keys():
             if part_name in moving_part_names:
                 part_pts = transformed_part_to_pts_dict_3d_latest[part_name]
-                curr_approach =  np.dot(env.APPROACH0[None, :], opt_pose_homo[:3, :3].T)
+                curr_approach =  np.dot(env.robot.approach0[None, :], opt_pose_homo[:3, :3].T)
                 transformed_part_to_pts_dict_3d_latest[part_name] = np.dot(part_pts, opt_pose_homo[:3, :3].T) + opt_pose_homo[:3, 3]
 
         transformed_part_to_pts_dict_3d.append(transformed_part_to_pts_dict_3d_latest)
@@ -170,6 +169,8 @@ class SubgoalSolver:
     def __init__(self, config, ):
         self.config = config
         self.last_opt_result = None
+        self.ik_solver = None ## TODO: implement this later
+        self.reset_joint_pos = None
         # warmup
     #     self._warmup()
 
@@ -261,6 +262,10 @@ class SubgoalSolver:
         # ====================================
         # = setup bounds and initial guess
         # ====================================
+        test_num = goal_constraints[0]()
+        if test_num is None or test_num > 1e10: ## TODO: A more elegant way needed
+            return ee_pose, {}
+
         ee_pose = ee_pose.astype(np.float64)
         ee_pose_homo = T.pose2mat([ee_pose[:3], ee_pose[3:]])
         ee_pose_euler = np.concatenate([ee_pose[:3], T.quat2euler(ee_pose[3:])])
@@ -294,13 +299,13 @@ class SubgoalSolver:
         centering_transform = np.linalg.inv(ee_pose_homo)
         part_to_pts_dict_3d_centered = copy.deepcopy(part_to_pts_dict_3d)
 
-        prev_approach = R.from_quat(env.robot.get_current_pose()[1]).as_matrix() @ env.APPROACH0
 
         for key in part_to_pts_dict_3d_centered[-1].keys():
             if key in moving_part_names:
-                part_to_pts_dict_3d_centered[-1][key] = np.dot(part_to_pts_dict_3d_centered[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3] + env.APPROACH0 * env.EEF_TO_GRASP_POINT_DIST
+                part_to_pts_dict_3d_centered[-1][key] = np.dot(part_to_pts_dict_3d_centered[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3] + env.robot.approach0 * env.robot.eef_to_grasp_dist
                
         aux_args = (og_bounds,
+                    env,
                     part_to_pts_dict_3d_centered,
                     moving_part_names,
                     goal_constraints,
@@ -325,7 +330,6 @@ class SubgoalSolver:
         if from_scratch:
             opt_result = dual_annealing(
                 func=objective,
-                env=env,
                 bounds=bounds,
                 args=aux_args,
                 maxfun=self.config['sampling_maxfun'],
