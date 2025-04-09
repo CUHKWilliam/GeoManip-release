@@ -1,0 +1,62 @@
+Examples for geometric constraint generation and flow constraint generation for each stage under the task:
+  - "pouring liquid from teapot until the cup is filled": 
+    - "grasp teapot" stage: (stage 1)
+      - <"grasp", "the handle of the teapot">
+    - "align teapot with cup" stage: (stage 2)
+      - <"sub-goal constraints", "the center of the teapot spout of the teapot", "the center of body of the cup", "the center of the teapot spout of the teapot is directly above the center of the body of the cup by around 20 centimeters">
+    - "tilt teapot clockwisely (anti-clockwisely)" stage: (stage 3)
+      - <"sub-goal constraints", "the area of the handle of the teapot", "the normal of the handle of the teapot", "the area of the handle of the teapot rotates around the normal of the handle of the teapot by 50 degrees (-50 degrees)">
+    - "place the teapot on the table near the cup" stage: (stage 4)
+      - <"sub-goal constraints", "the surface of the table", "the center of the teapot spout of the teapot ", "the center of the teapot spout of the teapot is above the surface of the table by 30 cm">
+
+  - "put red block on top of the blue block":
+    - "grasp red block" stage:
+      - <"grasp", "the body of the red block">
+      - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+    - "drop the red block on top of blue block" stage:
+      - <"sub-goal constraints", "the center of the red block", "the center of the blue block", "the center of the red block is directly above the center of the blue block around 20 centimeters">
+    - "release the red block" stage:
+      - <"release">
+  - "open the door around the door hinge":
+    - "grasp the door handle" stage:
+      - <"grasp", "the handle of the door">
+    - "rotate the door" stage:
+      - <"sub-goal constraints", "the plane of the surface of the door", "the axis of the hinge of the door", "the plane of the surface of the door rotates around the axis of the hinge of the door by 90 degree">
+      - <"path constaints", "the center of the handle of the door", "the axis of the hinge of the door", "the distance between the center of the handle of the robot and the hinge of the body of the door remains unchanged">
+    - "release the door" stage:
+      - <"release">
+  - "cut the cucumber with the kitchen knife":
+    - 'grasp the kitchen knife' stage:
+      - <"grasp", "the handle of the kitchen knife">
+    - "hang the knife above the cucumber"
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the body of the cucumber", "the center of the blade of the kitchen knife is directly above the center of the body of the cucumber by 20 cm">
+      - <"sub-goal constaints", "the axis of the cucumber", "the plane of the blade of the knife", "the axis of the cucumber is perpendicular to the plane of the blade of the knife">
+      - <"sub-goal constaints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife is parallel to the plane of the surface of the table">
+    - "chop the cucumber" stage:
+      - <"path constaints", "the axis of the cucumer", "the plane of the blade of the knife", "the axis of the cucumber remains perpendicular to the plane of the blade of the knife"> (remain from the previous constraints)
+      - <"path constaints", "the heading direction of the blade of the knife", "the plane of the surface of the table", "the heading direction of the blade of the knife remains parallel to the plane of the surface of the table"> (remain from the previous constraints)
+      - <"sub-goal constaints", "the center of the blade of the kitchen knife", "the center of the surface of the table", "the area of the blade of the kitchen knife is above the area of the surface of the table by 1 cm">
+    - "release the cucumber" stage:
+      - <"release">
+  - "open the drawer":
+    - "grasp the drawer handle" stage:
+      - <"grasp", "the handle of the drawer">
+    - "pull the drawer" stage:
+      - <"sub-goal constraints", "the center of the handle of the drawer", "the center of the body the drawer", "the center of the handle of the drawer move against the center of the body of the drawer by around 30 cm">
+    - "release the drawer" stage:
+      - <"release">
+  - "press the button"
+    - "close the gripper" stage:
+      - <"grasp", "">
+    - "move to ready-to-press position" stage:
+      - <"sub-goal constaints", "the heading direction of the robot approach of the robot", "the center of the body of the button", "the heading direction of the gripper approach of the robot colinear with the center of the body of the button">
+      - <"path constaints", "the heading direction of the gripper of the robot", "the plane of the surface of the button", "the heading direction of the gripper of the robot remains parallel to the normal of the surface of the button">
+    - "pressing" stage:
+      - <"sub-goal constaints", "the center of the gripper of the robot", "the center of body of the button", "the center of the gripper of the robot reaches the center of the body of the button">
+      - <"path constaints", "the heading direction of the gripper of the robot", "the plane of the surface of the button", "the heading direction of the gripper of the robot remains parallel to the normal of the surface of the button">
+Example for geometric constraint generation and flow constraint generation under a single stage:
+- Orbiting: We can only orbit each time 30 degrees due to design limitation. If we want to orbit for a circle, we need to repeatedly orbit 30 degrees by 12 times.
+  - "orbit in one circle by x cm"
+    - <"sub-goal constraints", "the center of A", "the center B", "the center of A orbit the center of B by 30 degrees">
+    - <"path constraints", "the center of A", "the center of B", "the distance between the center of A and the center of B remains x cm">
+    - <"flow constraints", "repeat this stage for 12 times (360 degrees in total)">

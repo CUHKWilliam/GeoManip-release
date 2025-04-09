@@ -1,0 +1,6 @@
+*.pth
+*.pkl
+*.npy
+*.json
+*__pycache__*
+

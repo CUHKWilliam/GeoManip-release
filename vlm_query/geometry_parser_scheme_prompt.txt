@@ -1,0 +1,27 @@
+Here are some knowledge about finding the parts given segmentation masks: {}
+There are totally {} images. 
+Each image is the image of {} with different part highlighted in red, labeled as image i, ... (i=0, 1, 2, ...)
+    Please infer what is highlighted in red in the images one by one, and then select one of the image of {}.
+    - Output: image i, `part` (i=0,1,2... is the index number).
+    - Where `part` is the part of the highlighted area, like the edge, the center, the area, left point, right, point, etc..
+    <think>[your thinking process] </think>
+    <answer>[your answer here]</answer>
+
+<splitter>
+
+Write a Python function to find out the {} given the selected image. 
+    - the input `mask` is a boolean numpy array of a segmentation mask in shapes (H, W)
+    - return the mask which is a numpy array. 
+    - mask_output should still be in the shape(H, W)
+    - If the selected mask is already what we want, directly return the mask 
+<think> [your thinking process here] </think>
+<answer>
+## code start here
+## don't change the function name and input variable number !
+## Don't just call the function defined in the examples. You need to rewrite it in the implemetation.
+## Previous codes: import numpy as np; import scipy; import cv2
+def segment_object(mask):
+    [your code here]
+    return mask_output
+## Don't output anything after this line !
+</answer>

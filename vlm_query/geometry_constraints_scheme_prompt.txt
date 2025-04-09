@@ -1,0 +1,47 @@
+## Query
+Query Task: "{}"
+
+## Instructions
+Suppose you are controlling a robot to perform manipulation tasks. The manipulation task is given as an image of the environment. For each given task, please perform the following steps:
+1. Task decomposition: 
+Determine how many stages are involved in the task. 
+Grasping or releasing must be an independent stage. 
+Some examples:
+  - "pouring tea from teapot":
+    - 5 stages: "grasp teapot", "align teapot with cup", "tilt teapot", "place the teapot on the table", "release"
+  - "put red block on top of blue block":
+    - 3 stages: "grasp red block", "drop the red block on top of blue block"
+  - "reorient bouquet and drop it upright into vase":
+    - 3 stages: "grasp bouquet", "reorient bouquet", and "keep upright and drop into vase"
+2. Geometric constraint generation: For each stage except for the grasping and release stage, please write geometric constraints in lines. Each line represent a constraint should be satisfied. 
+- Geometric constraint is a tuple of multiple element: <"constraints type", "`geometry 1` of `the object part` of `the object`, "`geometry 2` of `the object part` of `the object`, ...(if any),  "constraints">, each element is explained in the follows:
+  - "geometry":  Basic geometric primitive like the left edge, the center point, the plane, the normal, the right area, heading direction, and etc..
+  - "the object part": the key object part on an object, like the tip, the opening, the handle, the hinge, the slider, the gripper, etc.
+  - "the object": the complete object, like the black cup, the second door, the teapot, the robot, etc.
+  - "constraint":
+    - 1. basic geometric relationship including parallel, perpendicular, vertical, intersect, and etc.. 
+    - 2. positional constraint like above, below, to the left / right, and etc.. 
+    - 3. Distance range like "by 20 centimeters", "around 20 centimeters", "more than 25 centimeters", "10 centimeters to 20 centimeters", "45 degress", etc..
+    - 4. Transformation like "rotate", "shift", etc.
+  - Specify the <`geometry` of `the object part` of `the object`> in the "constraint"
+  - "constraints type": 
+    1. "sub-goal constraints": constraints among `geometry 1`, `geometry 2`, ... that must be satisfied **at the end of the stage**. In other word, it specifies the constraints of the destination position.
+    2. "path constraints": constraints among `geometry 1`, `geometry 2`, ... that must remain satisfied **within the stage**. In other word, it specifies the constaints on the way to the destination position.
+- Do not ignore "of". There must of at least two "of": "`geometry` of `the object part` of `the object`". If you what to specify `geometry` of the whole object, use `geometry` of the body of `the object`
+- For the grasping stage, sub-goal constraint 1 should be  <"grasp", "the area of `the object part` of `the object`">
+- For grasping stage, you can also specify the sub-goal constraints of the heading direction of the gripper approach of the robot or the heading direction of the gripper binormal of the robot:
+  - approach: the direction of the robot gripper pointing at, usually perpendicular to some surface. You can get the gripper approach by calling get_point_cloud("the gripper approach of the robot", -1). To find its heading direction, find its eigenvector with max eigenvalue.
+  - binormal: the direction of gripper opening / closing, usually perpendicular to some axis / heading direction or parallel to some normal. You can get the gripper binormal by calling get_point_cloud("the gripper binormal of the robot", -1). To find its heading direction, find its eigenvector with max eigenvalue.
+- To close the gripper only without grasping anything, output <"grasp", "">
+- If you want to use the gripper, only specify its center position, the heading direction(approach), or the binormal. 
+- For the releasing stage, sub-goal constraint should be <"release">
+- Avoid using the part that is invisible in the image like "bottom", "back part" and etc.
+- Please give as detailed constraint as possible.
+- Use geometry as less as possible !
+- To move something, you must grasp it first.
+- Each stage can only do a single action one time.
+- Don't omit stages for the repeating stages, expand and list them one by one.
+- Please answer according to the image we provided, which is the previous scene.
+
+Here are some examples and knowledge for you to generate the geometric constraint:
+{}

@@ -1,0 +1,94 @@
+prompt_dir: &prompt_dir "vlm_query"
+bounds_min: &bounds_min [-0.5, -0.75, 0.0]
+bounds_min: &bounds_max [0.5, 1., 0.7]
+vlm_api_key: &vlm_api_key "sk-b24ffb4725274f398d51d4aab97efe0d"
+vlm_base_url: &vlm_base_url "https://dashscope.aliyuncs.com/compatible-mode/v1"
+vlm_model: &vlm_model "qwen2.5-vl-72b-instruct"
+llm_api_key: &llm_api_key "sk-6cf616fbddf74b7ab8e79f8f764c4957"
+llm_base_url: &llm_base_url "https://api.deepseek.com"
+llm_model: &llm_model "deepseek-chat"
+
+
+pipeline:
+  type: GeomanipPipeline
+  config:
+    constraint_generator:
+      type: GeometricAndCodeGenerator
+      config:
+        prompt_dir: *prompt_dir
+        llm_api_key: *llm_api_key
+        llm_base_url: *llm_base_url
+        llm_model: *llm_model
+        vlm_api_key: *vlm_api_key
+        vlm_base_url: *vlm_base_url
+        vlm_model: *vlm_model
+        temperature: 0.8
+        top_p: 0.5
+
+    perception:
+      type: GeometryParser
+      config:
+        promt_dir: *prompt_dir
+        box_threshold: 0.05
+        text_threshold: 0.2
+        filter_ratio: 0.1
+        margin: 5
+        temperature: 0.1
+        top_p: 0.1
+        vlm_api_key: *vlm_api_key
+        vlm_base_url: *vlm_base_url
+        vlm_model: *vlm_model
+        sam_weight_path: "./sam_vit_h_4b8939.pth"
+        grounding_dino_weight_path: "GroundingDino/weights/groundingdino_swint_ogc.pth"
+        grounding_dino_config_path: "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+        visualizer:
+          type: ImageVisualizer
+          config:
+            no_use: 
+
+    path_solver:
+      type: PathSolver
+      config:
+        bounds_min: *bounds_min
+        bounds_max: *bounds_max
+        sampling_maxfun: 5000
+        max_collision_points: 60
+        constraint_tolerance: 0.001
+        opt_pos_step_size: 0.20
+        opt_rot_step_size: 0.78
+        opt_interpolate_pos_step_size: 0.02
+        opt_interpolate_rot_step_size: 0.10
+        interpolate_pos_step_size: 0.05
+        interpolate_rot_step_size: 0.34
+        minimizer_options:
+          maxiter: 50
+
+    subgoal_solver:
+      type: SubgoalSolver
+      config:
+        bounds_min: *bounds_min
+        bounds_max: *bounds_max
+        sampling_maxfun: 5000
+        max_collision_points: 60
+        constraint_tolerance: 0.001
+        opt_pos_step_size: 0.20
+        opt_rot_step_size: 0.78
+        opt_interpolate_pos_step_size: 0.02
+        opt_interpolate_rot_step_size: 0.10
+        interpolate_pos_step_size: 0.05
+        interpolate_rot_step_size: 0.34
+        minimizer_options:
+          maxiter: 50
+
+    visualizer:
+      type: SubgoalPathVisualizer
+      config:
+        bounds_min: *bounds_min
+        bounds_max: *bounds_max
+
+    environment:
+      type: RealWorldEnv
+      config:
+        bounds_min: *bounds_min
+        bounds_max: *bounds_max
+        use_cache: False
