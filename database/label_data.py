@@ -11,9 +11,15 @@ from OpenGL.GLU import *
 from PyQt5.QtGui import *
 import sys
 from segment_anything import SamPredictor, sam_model_registry
+import argparse
 
-device = "mps"
-data_root = "./table"
+parser = argparse.ArgumentParser()
+parser.add_argument("--device", type=str, default="mps")
+parser.add_argument("--data_root", type=str, default="bowl")
+args = parser.parse_args()
+
+device = args.device
+data_root = args.data_root
 
 sam = sam_model_registry["vit_h"]("../saved_pretrained/sam_vit_h_4b8939.pth").to(device)
 predictor = SamPredictor(sam)

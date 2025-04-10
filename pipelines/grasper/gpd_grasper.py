@@ -6,9 +6,10 @@ import os
 import subprocess
 import cv2
 from scipy.spatial.transform import Rotation as R
+from .base_grasper import GrasperBase
 
 @PIPELINES.register_module()
-class GPDGrasper:
+class GPDGrasper(GrasperBase):
     def __init__(self, config) -> None:
         self.config = config
     

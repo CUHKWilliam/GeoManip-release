@@ -17,9 +17,9 @@ import re
 import cv2
 from utils.registry import PERCEPTION
 from ..perception_base import PerceptionBase
-from groundingdino.util.inference import load_model, load_image, predict, annotate
 import cv2
 
+@DeprecationWarning("To be deprecated since it's too slow")
 @PERCEPTION.register_module()
 class GeometryParser(PerceptionBase):
     def __init__(self, config):
@@ -38,8 +38,6 @@ class GeometryParser(PerceptionBase):
             self.sam,
         )
 
-        ## GroundingDINO
-        self.grounding_dino_model = load_model(config['grounding_dino_config_path'], config['grounding_dino_weight_path'])        
         ## Qwen
         self.client = OpenAI(api_key=config['vlm_api_key'], base_url=config['vlm_base_url'])
         self.vlm_model = config['vlm_model']
@@ -63,33 +61,6 @@ class GeometryParser(PerceptionBase):
                 masks2.append(mask)
         masks2 = np.stack(masks2, axis=0)
         return masks2
-    
-    def crop_obj(self, img_path, obj_name, ):
-        """
-        Crop object bounding box using GroundingDino
-        """
-        image_source = cv2.imread(img_path)
-        ## TODO: grounding dino can only take the nounce as input. Using 'a', 'the' degrades its performance severely.
-        obj_name = obj_name.replace("the", "").replace("a ", "").strip()
-
-        inputs = self.processor(images=Image.fromarray(image_source), text=obj_name)
-        for key in inputs:
-            inputs[key] = inputs[key].to(self.config['device'])
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-        results = self.processor.post_process_grounded_object_detection(
-            outputs,
-            inputs.input_ids,
-            box_threshold=self.box_threshold,
-            text_threshold=self.text_threshold,
-        )[0]
-        box = results['boxes'][0]
-        w, h = image_source.shape[1], image_source.shape[0]
-        box *= torch.tensor([w, h, w, h]).to(self.config['device'])
-        
-        h, w = image_source.shape[0], image_source.shape[1]
-        obj_image = image_source[max(int(box[1]) - self.margin, 0): min(int(box[3]) + self.margin, h - 1), max(int(box[0]) - self.margin, 0): min(int(box[2]) + self.margin, w - 1), :]
-        return obj_image, box
     
     def generate_mask_candidates(self, img, geometry_description, overwrite=False):
         mask_path0 = os.path.join(self.task_dir, "mask_{}_{}.png").format(geometry_description, 0)
@@ -235,7 +206,7 @@ class GeometryParser(PerceptionBase):
         img_cached_path = os.path.join(self.task_dir, "query_img.png")
         if not os.path.exists(img_cached_path):
             cv2.imwrite(img_cached_path, img[:, :, ::-1])
-        obj_img, box = self.crop_obj(img_cached_path, obj_name)
+        obj_img, box = self.cropper.crop_obj(img_cached_path, obj_name)
         mask_candidates = self.generate_mask_candidates(obj_img, geometry_description)
         mask_candidates = self.filter_masks(mask_candidates)
         messages, selected_mask, part = self.select_mask(geometry_description, obj_name, mask_candidates)

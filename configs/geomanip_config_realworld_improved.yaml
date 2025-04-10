@@ -43,7 +43,7 @@ pipeline:
         promt_dir: *prompt_dir
         mask_selector:
         filter_ratio: 0.1
-        margin: 5
+        margin: 10
         backbone: "swin"
         database_root: "./database/"
         feature_extractor_path: "./saved_pretrained/swin_base_patch4_window12_384_22kto1k.pth"
@@ -53,22 +53,22 @@ pipeline:
         img_size: 384
         
 
-    path_solver:
-      type: PathSolver
-      config:
-        bounds_min: *bounds_min
-        bounds_max: *bounds_max
-        sampling_maxfun: 5000
-        max_collision_points: 60
-        constraint_tolerance: 0.001
-        opt_pos_step_size: 0.20
-        opt_rot_step_size: 0.78
-        opt_interpolate_pos_step_size: 0.02
-        opt_interpolate_rot_step_size: 0.10
-        interpolate_pos_step_size: 0.05
-        interpolate_rot_step_size: 0.34
-        minimizer_options:
-          maxiter: 10
+    # path_solver:
+    #   type: PathSolver
+    #   config:
+    #     bounds_min: *bounds_min
+    #     bounds_max: *bounds_max
+    #     sampling_maxfun: 5000
+    #     max_collision_points: 60
+    #     constraint_tolerance: 0.001
+    #     opt_pos_step_size: 0.20
+    #     opt_rot_step_size: 0.78
+    #     opt_interpolate_pos_step_size: 0.02
+    #     opt_interpolate_rot_step_size: 0.10
+    #     interpolate_pos_step_size: 0.05
+    #     interpolate_rot_step_size: 0.34
+    #     minimizer_options:
+    #       maxiter: 10
     subgoal_solver:
       type: SubgoalSolver
       config:
@@ -114,5 +114,8 @@ pipeline:
             # Camera specific configs
             resolution: [1280, 720] # width, height
             extrinsic: [[-0.18746593, 0.51792903,-0.83462929, 0.38557143], [ 0.98110535, 0.14011352,-0.13341847, 0.49040391], [0.04784155,-0.84387068,-0.53440945, 0.38047709]]
-
+        updator:
+          type: UpdateBySolver
+          config:
+            no_use:
    

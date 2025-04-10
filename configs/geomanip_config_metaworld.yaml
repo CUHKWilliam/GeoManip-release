@@ -43,8 +43,11 @@ pipeline:
         vlm_base_url: *vlm_base_url
         vlm_model: *vlm_model
         sam_weight_path: "./sam_vit_h_4b8939.pth"
-        grounding_dino_weight_path: "GroundingDino/weights/groundingdino_swint_ogc.pth"
-        grounding_dino_config_path: "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+        cropper:
+          type: GroundingDinoCropper
+          config:
+            grounding_dino_weight_path: "GroundingDino/weights/groundingdino_swint_ogc.pth"
+            grounding_dino_config_path: "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
         visualizer:
           type: ImageVisualizer
           config:

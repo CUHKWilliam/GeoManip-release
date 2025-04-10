@@ -21,18 +21,21 @@ class GeomanipPipeline(PipelineBase):
 
     def get_next_path(self, next_subgoal, constraint_fns, stage_idx):
         path_constraints = constraint_fns[stage_idx]['path']
-        path, debug_dict = self.path_solver.solve(
-                                    self.environment,
-                                    np.concatenate(self.environment.robot.get_current_pose()),
-                                    next_subgoal,
-                                    self.environment.part_to_pts_dict,
-                                    self.environment.moving_part_names,
-                                    path_constraints,
-                                    None,
-                                    from_scratch=self.first_iter,
-                                    occlusion_func=None,
-                                    curr_ee_pose=np.concatenate(self.environment.robot.get_current_pose())
-                                    )
+        if hasattr(self, "path_solver"):
+            path, debug_dict = self.path_solver.solve(
+                                        self.environment,
+                                        np.concatenate(self.environment.robot.get_current_pose()),
+                                        next_subgoal,
+                                        self.environment.part_to_pts_dict,
+                                        self.environment.moving_part_names,
+                                        path_constraints,
+                                        None,
+                                        from_scratch=self.first_iter,
+                                        occlusion_func=None,
+                                        curr_ee_pose=np.concatenate(self.environment.robot.get_current_pose())
+                                        )
+        else:
+            path = [np.concatenate(self.environment.robot.get_current_pose()), next_subgoal]
         path = np.stack([np.concatenate(self.environment.robot.get_current_pose()), next_subgoal])
         processed_path = self.process_path(path)
         self.visualizer.visualize_path(self.environment, processed_path)
@@ -45,7 +48,7 @@ class GeomanipPipeline(PipelineBase):
             return processed_path
         # spline interpolate the path from the current ee pose
         full_control_points = np.concatenate([
-            np.concatenate(self.env.robot.get_current_pose()).reshape(1, -1),
+            np.concatenate(self.environment.robot.get_current_pose()).reshape(1, -1),
             path,
         ], axis=0)
         num_steps = get_linear_interpolation_steps(full_control_points[0], full_control_points[-1],
@@ -88,7 +91,7 @@ class GeomanipPipeline(PipelineBase):
     def grasp_wrapper(self, ):
         def grasp(name):
             self.grasper.grasp(self.environment, )
-            self.already_grasped = 1
+            self.grasp_state = 1
         return grasp
     
     def grasp_postprocess(self, ):
@@ -96,22 +99,22 @@ class GeomanipPipeline(PipelineBase):
 
     def release_wrapper(self, ):
         def release():
-            self.env.robot.release()
+            self.environment.robot.release()
             self.already_grasped = 0
             self.release_postprocess()
         return release
     
     def release_postprocess(self, ):
-        current_approach = self.env.robot.get_current_approach()
-        self.env.robot.move_to_point(self.env.robot.get_current_pose()[0] - current_approach * 0.05, transition=True)
-        self.env.register_moving_part_names()
+        current_approach = self.environment.robot.get_current_approach()
+        self.environment.robot.move_to_point(self.environment.robot.get_current_pose()[0] - current_approach * 0.05, transition=True)
+        self.environment.register_moving_part_names()
 
     def execute(self, ):
         self.environment.last_pose = np.concatenate(self.environment.robot.get_current_pose())
         while len(self.action_queue) > 0:
             next_action = self.action_queue.pop(0)
             self.environment.robot.move_to_point(next_action)
-        self.environment.update_part_to_pts_dict()
+        self.environment.updator.update(self.environment)
         if self.grasp_state == 1:
             self.grasp_postprocess()
         else:

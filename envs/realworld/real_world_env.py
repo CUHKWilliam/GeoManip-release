@@ -6,6 +6,8 @@ import numpy as np
 from utils.registry import ENVIRONMENT
 import cv2
 from ..utils import downsample_point_cloud, filter_point_cloud
+from scipy.spatial.transform import Rotation as R
+
 
 @ENVIRONMENT.register_module()
 class RealWorldEnv(EnvBase):
@@ -71,7 +73,7 @@ class RealWorldEnv(EnvBase):
             if "robot" not in part and "gripper" not in part:
                 pcs = downsample_point_cloud(pcs)
                 try_filtered_pcs = filter_point_cloud(pcs)
-                if len(try_filtered_pcs) > 0:
+                if len(try_filtered_pcs) > 2:
                     pcs = try_filtered_pcs
             self.part_to_pts_dict[-1][part] = pcs
     
@@ -85,3 +87,12 @@ class RealWorldEnv(EnvBase):
     def get_point_cloud_with_timestamp_wrapper(self):
         def get_point_cloud_with_timestamp(name, ts):
             return self.part_to_pts_dict[ts][name]
+        return get_point_cloud_with_timestamp
+
+    def calculate_quat_from_apporach_and_binormal(self, approach, binormal):
+        assert len(approach) == 3 and len(binormal) == 3
+        source_points = np.stack([self.robot.approach0, self.robot.binormal0, np.array([0,0,0])], axis=0)
+        target_points = np.stack([approach, binormal, np.array([0, 0, 0])], axis=0)
+        transform_mat =  cv2.estimateAffine3D(source_points, target_points, force_rotation=True)[0][:3, :3]
+        target_quat = R.from_matrix(transform_mat).as_quat()
+        return target_quat

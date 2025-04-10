@@ -38,3 +38,28 @@ class WebQueryer:
                     output += chunk.choices[0].delta.content
             print(f'[{time.time()-start:.2f}s] Querying OpenAI API...Done')
             return output
+    
+@GENERATORS.register_module()
+class LocalQueyer:
+    def __init__(self, config):
+        self.config = config
+    
+    def query(self, messages, stream=False):
+        '''
+        Query local large model here
+        '''
+        pass
+
+@GENERATORS.register_module()
+class LocalQueryerClient():
+    def __init__(self, config):
+        self.config = config
+        self.communication_file = config['communication_file']
+        self.lock_file =config['lock_file']
+    
+    def query_remote(self, messages, stream):
+        pass
+
+    
+    def query(self, messages, stream=False):
+        self.query_remote(messages, stream)
