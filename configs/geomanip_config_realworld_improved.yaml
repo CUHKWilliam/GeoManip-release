@@ -132,7 +132,7 @@ pipeline:
             UR_robot_home_pose: [0, 0.5, 0.4, 3.1415, 0, 0]
             approach0: [0, 0, 1]
             binormal0: [0, 1, 0]
-            eef_to_grasp_dist: 0.1
+            eef_to_grasp_dist: 0.05
         camera:
           type: RealSense
           config:
@@ -143,3 +143,7 @@ pipeline:
           type: UpdateBySolver
           config:
             no_use:
+    data_recorder:
+      type: DataRecorderV1
+      config:
+        output_dir: record/record_data_v1

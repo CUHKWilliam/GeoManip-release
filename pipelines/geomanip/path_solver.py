@@ -291,7 +291,7 @@ class PathSolver:
         # ====================================
         # = other setup
         # ====================================
-        part_to_pts_dict_3d_centered = _center_geometry(start_pose, part_to_pts_dict_3d, moving_part_names, pos_only=pos_only)
+        part_to_pts_dict_3d_centered = _center_geometry(env, start_pose, part_to_pts_dict_3d, moving_part_names, pos_only=pos_only)
         aux_args = (og_bounds,
                     env,
                     start_pose,

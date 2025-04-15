@@ -10,7 +10,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import RotationSpline
 import scipy.interpolate as interpolate
 
-def _center_geometry(ee_pose, part_to_pts_dict_3d_original, moving_part_names, pos_only=False):
+def _center_geometry(env, ee_pose, part_to_pts_dict_3d_original, moving_part_names, ):
     part_to_pts_dict_3d = copy.deepcopy(part_to_pts_dict_3d_original)
     if len(ee_pose[3:]) == 3:
         ee_pose = np.concatenate([ee_pose[:3], T.euler2quat(ee_pose[3:])])
@@ -19,12 +19,14 @@ def _center_geometry(ee_pose, part_to_pts_dict_3d_original, moving_part_names, p
     part_to_pts_dict2_3d = {}
     for key in part_to_pts_dict_3d[-1].keys():
         if key in moving_part_names:
-            if not pos_only:
-                part_to_pts_dict2_3d[key] = np.dot(part_to_pts_dict_3d[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3]
+            if "robot" not in key and "gripper" not in key:
+                part_to_pts_dict2_3d[-1][key] = np.dot(part_to_pts_dict_3d[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3] + env.robot.approach0 * env.robot.eef_to_grasp_dist
             else:
-                part_to_pts_dict2_3d[key] = part_to_pts_dict_3d[-1][key] + centering_transform[:3, 3]
-        else:
-            part_to_pts_dict2_3d[key] = part_to_pts_dict_3d[-1][key]
+                if "approach" in key:
+                    part_to_pts_dict2_3d[-1][key] = np.linspace(np.array([0, 0, 0]), env.robot.approach0, 5)
+                elif "binormal" in key:
+                    part_to_pts_dict2_3d[-1][key] = np.linspace(np.array([0, 0, 0]), env.robot.binormal0, 5)
+
     part_to_pts_dict_3d[-1] = part_to_pts_dict2_3d
     return part_to_pts_dict_3d
 

@@ -60,6 +60,13 @@ def objective(opt_vars,
     cost += delta_cost
     debug_dict['delta_cost'] = delta_cost
 
+    ## TODO: the approach direction limit
+    approach0 = env.robot.approach0
+    approach_vec = approach0 @ opt_pose_homo[:3, :3].T
+    forbidden_approach_vec = np.array([0, 0, 1])
+    if np.dot(forbidden_approach_vec, approach_vec) > 0.5:
+        cost += 20000
+
 
     ## TODO: end
     # reachability cost (approximated by number of IK iterations + regularization from reset joint pos)
@@ -95,8 +102,7 @@ def objective(opt_vars,
         for part_name in transformed_part_to_pts_dict_3d_latest.keys():
             if part_name in moving_part_names:
                 part_pts = transformed_part_to_pts_dict_3d_latest[part_name]
-                curr_approach =  np.dot(env.robot.approach0[None, :], opt_pose_homo[:3, :3].T)
-                transformed_part_to_pts_dict_3d_latest[part_name] = np.dot(part_pts, opt_pose_homo[:3, :3].T) + opt_pose_homo[:3, 3]
+                transformed_part_to_pts_dict_3d_latest[part_name] = np.dot(part_pts, opt_pose_homo[:3, :3].T) + opt_pose_homo[:3, 3] + env.robot.approach0 * env.robot.eef_to_grasp_dist
 
         transformed_part_to_pts_dict_3d.append(transformed_part_to_pts_dict_3d_latest)
         env.part_to_pts_dict_simulation = copy.deepcopy(transformed_part_to_pts_dict_3d)
@@ -299,11 +305,16 @@ class SubgoalSolver:
         centering_transform = np.linalg.inv(ee_pose_homo)
         part_to_pts_dict_3d_centered = copy.deepcopy(part_to_pts_dict_3d)
 
-
         for key in part_to_pts_dict_3d_centered[-1].keys():
             if key in moving_part_names:
-                part_to_pts_dict_3d_centered[-1][key] = np.dot(part_to_pts_dict_3d_centered[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3] + env.robot.approach0 * env.robot.eef_to_grasp_dist
-               
+                if "robot" not in key and "gripper" not in key:
+                    part_to_pts_dict_3d_centered[-1][key] = np.dot(part_to_pts_dict_3d_centered[-1][key], centering_transform[:3, :3].T) + centering_transform[:3, 3]
+                else:
+                    if "approach" in key:
+                        part_to_pts_dict_3d_centered[-1][key] = np.linspace(np.array([0, 0, 0]), env.robot.approach0, 5)
+                    elif "binormal" in key:
+                        part_to_pts_dict_3d_centered[-1][key] = np.linspace(np.array([0, 0, 0]), env.robot.binormal0, 5)
+
         aux_args = (og_bounds,
                     env,
                     part_to_pts_dict_3d_centered,
