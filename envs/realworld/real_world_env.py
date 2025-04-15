@@ -102,3 +102,21 @@ class RealWorldEnv(EnvBase):
         transform_mat =  cv2.estimateAffine3D(source_points, target_points, force_rotation=True)[0][:3, :3]
         target_quat = R.from_matrix(transform_mat).as_quat()
         return target_quat
+
+    def move_to_point(self, target_pose):
+        if hasattr(self, "data_recorder"):
+            self.data_recorder.move_and_log(self, target_pose)
+        else:
+            self.robot.move_to_point(target_pose)
+    
+    def grasp(self,):
+        if hasattr(self, "data_recorder"):
+            self.data_recorder.grasp_and_log(self,)
+        else:
+            self.robot.grasp()
+    
+    def release(self,):
+        if hasattr(self, 'data_recorder'):
+            self.data_recorder.release_and_log(self,)
+        else:
+            self.robot.release()

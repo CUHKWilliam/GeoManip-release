@@ -21,8 +21,8 @@ class NaiveGrasper(GrasperBase):
         subgoal_approach = R.from_quat(subgoal_pose[3:]).as_matrix() @ env.robot.approach0
         pre_subgoal_pose = subgoal_pose.copy()
         pre_subgoal_pose[:3] = subgoal_pose[:3] - subgoal_approach * self.config['pregrasp_approach_offset']
-        env.robot.move_to_point(pre_subgoal_pose)
+        env.move_to_point(pre_subgoal_pose)
         subgoal_pose[:3] -=  subgoal_approach * self.config['grasp_approach_offset']
-        env.robot.move_to_point(subgoal_pose )
-        env.robot.grasp()
+        env.move_to_point(subgoal_pose )
+        env.grasp()
         return np.inf

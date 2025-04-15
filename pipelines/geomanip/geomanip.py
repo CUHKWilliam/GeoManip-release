@@ -20,7 +20,6 @@ class GeomanipPipeline(PipelineBase):
         self.config = config
         self.grasp_name = None
 
-
     def get_next_path(self, next_subgoal, constraint_fns, stage_idx):
         path_constraints = constraint_fns[stage_idx]['path']
         if hasattr(self, "path_solver"):
@@ -102,13 +101,13 @@ class GeomanipPipeline(PipelineBase):
 
     def release_wrapper(self, ):
         def release():
-            self.environment.robot.release()
+            self.environment.release()
             self.already_grasped = 0
         return release
     
     def release_postprocess(self, ):
         current_approach = self.environment.robot.get_current_approach()
-        self.environment.robot.move_to_point(self.environment.robot.get_current_pose()[0] - current_approach * 0.05, transition=True)
+        self.environment.move_to_point(self.environment.robot.get_current_pose()[0] - current_approach * 0.05, transition=True)
         self.environment.register_moving_part_names()
         self.grasp_name = None
 
@@ -116,10 +115,7 @@ class GeomanipPipeline(PipelineBase):
         self.environment.last_pose = np.concatenate(self.environment.robot.get_current_pose())
         while len(self.action_queue) > 0:
             next_action = self.action_queue.pop(0)
-            if hasattr(self, "data_recorder"):
-                self.data_recorder.move_and_record_data(self.environment, next_action)
-            else:
-                self.environment.robot.move_to_point(next_action)
+            self.environment.move_to_point(next_action)
         self.environment.updator.update(self.environment)
         if self.grasp_state == 1:
             self.grasp_postprocess()
@@ -142,5 +138,5 @@ class GeomanipPipeline(PipelineBase):
             self.execute()
             self.environment.update_stage(stage_idx + 1)
             import ipdb;ipdb.set_trace()
-
-        
+        if hasattr(self.env, "data_recorder"):
+            self.env.data_recorder.save()
