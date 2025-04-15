@@ -35,12 +35,21 @@ pipeline:
     interpolate_pos_step_size: 0.5
     interpolate_rot_step_size: 0.3
     grasper:
+      # ---- config for naive gripper ----
       type: "NaiveGrasper"
       config:
         pregrasp_approach_offset: 0.2
         grasp_approach_offset: 0.1
         approach: [0, 0, -1]
         binormal: [0, -1, 0]
+
+      ## ---- config for GPD gripper ------
+      # type: "GPDGrasper"
+      # config:
+      #   gpd_config_path: "./gpd/cfg/eigen_params.cfg"
+      #   grasp_selection_criterion: "direction preference"
+      #   pregrasp_approach_offset: 0.2
+      #   grasp_approach_offset: 0.1
 
     perception:
       type: GeometryParserMatcher

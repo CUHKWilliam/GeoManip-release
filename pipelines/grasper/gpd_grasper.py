@@ -22,8 +22,6 @@ class GPDGrasper(GrasperBase):
         pcd.points = o3d.utility.Vector3dVector(segm_pts_3d)
         pcd.colors = o3d.utility.Vector3dVector(np.ones((segm_pts_3d.shape[0], 3)))
         o3d.io.write_point_cloud("tmp.pcd", pcd)
-        pcd.points = o3d.utility.Vector3dVector(segm_pts_3d + pcs_mean)
-        o3d.io.write_point_cloud("debug.ply", pcd)
         grasp_cfg_path = os.path.join(self.config['gpd_config_path'])
         grasp_bin_path = "detect_grasps"
         output = subprocess.check_output(['{}'.format(grasp_bin_path), '{}'.format(grasp_cfg_path), "tmp.pcd"])
@@ -56,32 +54,20 @@ class GPDGrasper(GrasperBase):
         binormals = np.stack(binormals, axis=0)
         starts = positions + pcs_mean
         target_quats = []
-        transform_mats = []
 
         for i in range(len(approaches)):
             approach = approaches[i]
             binormal = binormals[i]
-            start = starts[i]
-            source_points = np.stack([env.APPROACH0, env.BINORMAL0, np.array([0,0,0])], axis=0)
-            target_points = np.stack([approach, binormal, np.array([0, 0, 0])], axis=0)
-            transform_mat =  cv2.estimateAffine3D(source_points, target_points, force_rotation=True)[0][:3, :3]
-            transform_mats.append(transform_mat)
-            mat = transform_mat
-            target_quat = R.from_matrix(mat).as_quat()
+            target_quat = env.calculate_quat_from_apporach_and_binormal(approach, binormal)
             target_quats.append(target_quat)
-
-        target_quats = np.stack(target_quats, axis=0)
-        transform_mats = np.stack(transform_mats)
-
         target_quats = np.stack(target_quats, axis=0)
         target_positions = starts
-
-        target_positions -= approaches * 0.3
         subgoal_poses = np.concatenate([target_positions, target_quats], axis=-1)
         return subgoal_poses
     
     def select_grasp(self, subgoal_poses, env):
         costs = []
+        
         for subgoal_pose in subgoal_poses:
             ## TODO: implement this later
             # subgoal_pose_homo = T.pose2mat([subgoal_pose[:3], subgoal_pose[3:]])
@@ -91,13 +77,16 @@ class GPDGrasper(GrasperBase):
             # for constraint in constraints:
             #     cost += constraint()
             # collision_cost = 0.
+            # env.part_to_pts_dict_simulation = None
 
-            ## TODO: direction preference
-            approach = R.from_quat(subgoal_pose[3:]).as_matrix() @ env.robot.approach0
-            preference = np.array([0, 0, -1])
-            cost += 1 - np.dot(approach, preference)
-            
-            env.part_to_pts_dict_simulation = None
+            if self.config['grasp_selection_criterion'] == "direction preference":
+                ## TODO: direction preference
+                approach = R.from_quat(subgoal_pose[3:]).as_matrix() @ env.robot.approach0
+                preference = np.array([0, 0, -1])
+                cost = 1 - np.dot(approach, preference)
+            else:
+                raise NotImplementedError
+        
             costs.append(cost)
         costs = np.stack(costs, axis=0)
         subgoal_pose = subgoal_poses[np.argmin(costs)]
@@ -107,9 +96,11 @@ class GPDGrasper(GrasperBase):
         subgoal_poses = self.generate_candidates(env)
         subgoal_pose = self.select_grasp(subgoal_poses, env)
         subgoal_approach = R.from_quat(subgoal_pose[3:]).as_matrix() @ env.robot.approach0
-        pre_subgoal_pose = subgoal_pose - subgoal_approach * self.config['pregrasp_approach_offset']
+        pre_subgoal_pose = subgoal_pose.copy()
+        pre_subgoal_pose[:3] = subgoal_pose[:3] - subgoal_approach * self.config['pregrasp_approach_offset']
         env.robot.move_to_point(pre_subgoal_pose)
-        env.robot.move_to_point(subgoal_pose  - subgoal_approach * self.config['grasp_approach_offset'])
+        subgoal_pose[:3] -=  subgoal_approach * self.config['grasp_approach_offset']
+        env.robot.move_to_point(subgoal_pose )
         env.robot.grasp()
         return 
 
