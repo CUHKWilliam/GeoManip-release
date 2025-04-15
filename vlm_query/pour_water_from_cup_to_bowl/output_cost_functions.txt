@@ -55,7 +55,7 @@ def stage_2_subgoal_constraint1():
 ### <stage constraints splitter> ###
 ### stage 3 sub-goal constraints
 def stage_3_subgoal_constraint1():
-    """constraints: <"sub-goal constraints", "the area of the handle of the cup", "the normal of the handle of the cup", "the area of the handle of the cup rotates around the normal of the handle of the cup by 45 degrees"> """
+    """constraints: <"sub-goal constraints", "the area of the handle of the cup", "the normal of the handle of the cup", "the area of the handle of the cup rotates around the normal of the handle of the cup by -45 degrees"> """
     pc1 = get_point_cloud("the handle of the cup", -1)
     pc1_previous = get_point_cloud("the handle of the cup", -2)
 
@@ -68,7 +68,7 @@ def stage_3_subgoal_constraint1():
     handle_normal = handle_normal / np.linalg.norm(handle_normal)
 
     # Convert the angle from degrees to radians
-    angle_radians = np.radians(45)
+    angle_radians = np.radians(-45)
 
     # Compute the rotation matrix using Rodrigues' rotation formula
     K = np.array([[0, -handle_normal[2], handle_normal[1]],

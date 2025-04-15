@@ -15,7 +15,7 @@ class NaiveGrasper(GrasperBase):
     def grasp(self, env, ):
         name = env.get_grasp_name()
         segm_pts_3d = copy.deepcopy(env.part_to_pts_dict[-1][name])
-        target_approach, target_binormal = np.array([0, 0, -1]), np.array([0, 1, 0])
+        target_approach, target_binormal = np.array(self.config['approach']), np.array(self.config['binormal'])
         target_quat = env.calculate_quat_from_apporach_and_binormal(target_approach, target_binormal)
         subgoal_pose = np.concatenate([segm_pts_3d.mean(0), target_quat])
         subgoal_approach = R.from_quat(subgoal_pose[3:]).as_matrix() @ env.robot.approach0

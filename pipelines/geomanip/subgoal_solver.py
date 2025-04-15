@@ -264,7 +264,7 @@ class SubgoalSolver:
         # ====================================
         test_num = goal_constraints[0]()
         if test_num is None or test_num > 1e10: ## TODO: A more elegant implementation needed
-            return ee_pose, {}
+            return np.concatenate(env.robot.get_current_pose()), {}
 
         ee_pose = ee_pose.astype(np.float64)
         ee_pose_homo = T.pose2mat([ee_pose[:3], ee_pose[3:]])

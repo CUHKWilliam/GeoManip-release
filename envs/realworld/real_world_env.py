@@ -18,16 +18,19 @@ class RealWorldEnv(EnvBase):
         self.use_cache = self.config['use_cache']
         self.part_to_pts_dict = []
         self.stage_num = 1
+        self.part_to_pts_dict_simulation = None
 
-    def register_moving_part_names(self, moving_names=None):
+    def register_moving_part_names(self, grasp_name=None):
         parts = self.part_to_pts_dict[-1].keys()
         updated_moving_parts = []
         for part in parts:
             if "robot" in part or "gripper" in part :
                 updated_moving_parts.append(part)
-        if moving_names is not None:
-            for moving_name in moving_names:
-                updated_moving_parts.append(moving_name)
+        if grasp_name is not None:
+            obj_name = grasp_name.split(" ")[-1] ## TODO: need better design 
+            for moving_name in parts:
+                if obj_name in moving_name:
+                    updated_moving_parts.append(moving_name)
         self.moving_part_names = updated_moving_parts
 
     def register_geometries(self, task_dir, cost_function_text, geometry_parser):
@@ -86,7 +89,10 @@ class RealWorldEnv(EnvBase):
 
     def get_point_cloud_with_timestamp_wrapper(self):
         def get_point_cloud_with_timestamp(name, ts):
-            return self.part_to_pts_dict[ts][name]
+            if self.part_to_pts_dict_simulation is not None:
+                return self.part_to_pts_dict_simulation[ts][name]
+            else:
+                return self.part_to_pts_dict[ts][name]
         return get_point_cloud_with_timestamp
 
     def calculate_quat_from_apporach_and_binormal(self, approach, binormal):

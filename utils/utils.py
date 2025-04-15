@@ -1075,3 +1075,10 @@ def quaternion_to_rotation_vector(q):
     axis = np.array([x, y, z]) / np.sin(theta / 2.0)  # 旋转轴
     rotation_vector = theta * axis
     return rotation_vector
+
+def ensure_shortest_quaterion(q1, q2):
+    q1 = q1 / np.linalg.norm(q1)
+    q2 = q2 / np.linalg.norm(q2)
+    if np.dot(q1, q2) < 0:
+        q2 = -q2
+    return q2

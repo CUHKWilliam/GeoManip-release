@@ -8,7 +8,7 @@ from utils.utils import exec_safe
 from scipy.spatial.transform import Slerp
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import RotationSpline
-
+import scipy.interpolate as interpolate
 
 def _center_geometry(ee_pose, part_to_pts_dict_3d_original, moving_part_names, pos_only=False):
     part_to_pts_dict_3d = copy.deepcopy(part_to_pts_dict_3d_original)
@@ -90,6 +90,23 @@ def linear_interpolate_poses(start_pose, end_pose, num_poses):
             pose = np.concatenate([pos, quat])
             poses.append(pose)
     return np.array(poses)
+
+def fit_b_spline(control_points):
+    # determine appropriate k
+    k = min(3, control_points.shape[0]-1)
+    spline = interpolate.splprep(control_points.T, s=0, k=k)
+    return spline
+
+def sample_from_spline(spline, num_samples):
+    sample_points = np.linspace(0, 1, num_samples)
+    if isinstance(spline, RotationSpline):
+        samples = spline(sample_points).as_matrix()  # [num_samples, 3, 3]
+    else:
+        assert isinstance(spline, tuple) and len(spline) == 2, 'spline must be a tuple of (tck, u)'
+        tck, u = spline
+        samples = interpolate.splev(np.linspace(0, 1, num_samples), tck)  # [spline_dim, num_samples]
+        samples = np.array(samples).T  # [num_samples, spline_dim]
+    return samples
 
 def spline_interpolate_poses(control_points, num_steps):
     """

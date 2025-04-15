@@ -7,4 +7,6 @@
 *.jpeg
 gpd2/*
 saved_pretrained/*
-
+*.so
+*/build/*
+gpd/models/*

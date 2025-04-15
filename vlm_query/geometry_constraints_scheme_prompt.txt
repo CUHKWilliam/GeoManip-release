@@ -8,7 +8,7 @@ Determine how many stages are involved in the task.
 Grasping or releasing must be an independent stage. 
 Some examples:
   - "pouring tea from teapot":
-    - 5 stages: "grasp teapot", "align teapot with cup", "tilt teapot", "place the teapot on the table", "release"
+    - 5 stages: "grasp teapot", "align teapot with cup", "tilt teapot clockwisely(anti-clockwisely)", "place the teapot on the table", "release"
   - "put red block on top of blue block":
     - 3 stages: "grasp red block", "drop the red block on top of blue block"
   - "reorient bouquet and drop it upright into vase":
@@ -41,6 +41,7 @@ Some examples:
 - To move something, you must grasp it first.
 - Each stage can only do a single action one time.
 - Don't omit stages for the repeating stages, expand and list them one by one.
+- In terms of rotation, tilting, ..., SPECIFY the direction (clockwisely or anticlockwisely)
 - Please answer according to the image we provided, which is the previous scene.
 
 Here are some examples and knowledge for you to generate the geometric constraint:

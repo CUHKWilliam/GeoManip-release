@@ -18,6 +18,7 @@ Please translate all the above geometric constraints for each stage into the Pyt
 - Don't call function defined in the geometry knowledge, copy it if necessary.
 - Don't call function that is not defined !
 - Left is -y axis, right is y axis, up is z axis, down is -z axis, front is x axis, back is -x axis.
+- If rotating, tilting, ... clockwisely, the angle is positive. If anti-clockwisely, the angle is negative !
 
 Here are some examples:
 

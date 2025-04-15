@@ -38,7 +38,9 @@ pipeline:
       type: "NaiveGrasper"
       config:
         pregrasp_approach_offset: 0.2
-        grasp_approach_offset: 0.05
+        grasp_approach_offset: 0.1
+        approach: [0, 0, -1]
+        binormal: [0, -1, 0]
 
     perception:
       type: GeometryParserMatcher

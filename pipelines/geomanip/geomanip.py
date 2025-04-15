@@ -18,6 +18,8 @@ class GeomanipPipeline(PipelineBase):
         self.grasp_part_name = None
         self.already_grasped = 0
         self.config = config
+        self.grasp_name = None
+
 
     def get_next_path(self, next_subgoal, constraint_fns, stage_idx):
         path_constraints = constraint_fns[stage_idx]['path']
@@ -37,7 +39,7 @@ class GeomanipPipeline(PipelineBase):
         else:
             path = [np.concatenate(self.environment.robot.get_current_pose()), next_subgoal]
         path = np.stack([np.concatenate(self.environment.robot.get_current_pose()), next_subgoal])
-        processed_path = self.process_path(path)
+        processed_path = self.process_path(path)[:, :-1]
         self.visualizer.visualize_path(self.environment, processed_path)
         return processed_path
 
@@ -65,7 +67,6 @@ class GeomanipPipeline(PipelineBase):
     def get_next_subgoal(self, constraint_fns, stage_idx):
         subgoal_constraints = constraint_fns[stage_idx]['subgoal']
         path_constraints = constraint_fns[stage_idx]['path']
-        
         subgoal_pose, debug_dict = self.subgoal_solver.solve(
                 np.concatenate(self.environment.robot.get_current_pose()),
                 self.environment,
@@ -92,22 +93,24 @@ class GeomanipPipeline(PipelineBase):
         def grasp(name):
             self.grasper.grasp(self.environment, )
             self.grasp_state = 1
+            self.grasp_name = self.environment.get_grasp_name()
         return grasp
     
     def grasp_postprocess(self, ):
         self.already_grasped = 1
+        self.environment.register_moving_part_names(self.grasp_name)
 
     def release_wrapper(self, ):
         def release():
             self.environment.robot.release()
             self.already_grasped = 0
-            self.release_postprocess()
         return release
     
     def release_postprocess(self, ):
         current_approach = self.environment.robot.get_current_approach()
         self.environment.robot.move_to_point(self.environment.robot.get_current_pose()[0] - current_approach * 0.05, transition=True)
         self.environment.register_moving_part_names()
+        self.grasp_name = None
 
     def execute(self, ):
         self.environment.last_pose = np.concatenate(self.environment.robot.get_current_pose())
@@ -135,3 +138,4 @@ class GeomanipPipeline(PipelineBase):
             self.plan_paths(self.cost_functions, stage_idx)
             self.execute()
             self.environment.update_stage(stage_idx + 1)
+            import ipdb;ipdb.set_trace()
