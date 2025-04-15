@@ -6,7 +6,7 @@ from utils import *
 
 class RobotBase():
     def __init__(self, config):
-        raise NotImplementedError
+        self.config = config
     
     def move_to_point(self, target: np.ndarray) -> None:
         """Move the gripper to the specified target pose.

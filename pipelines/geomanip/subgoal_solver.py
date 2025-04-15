@@ -263,7 +263,7 @@ class SubgoalSolver:
         # = setup bounds and initial guess
         # ====================================
         test_num = goal_constraints[0]()
-        if test_num is None or test_num > 1e10: ## TODO: A more elegant way needed
+        if test_num is None or test_num > 1e10: ## TODO: A more elegant implementation needed
             return ee_pose, {}
 
         ee_pose = ee_pose.astype(np.float64)

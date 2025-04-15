@@ -1,9 +1,19 @@
 from utils.registry import PERCEPTION
-from groundingdino.util.inference import load_model, load_image, predict, annotate
 import cv2
 import torch
 from PIL import Image
 import numpy as np
+
+@PERCEPTION.register_module()
+class NaiveCropper:
+    def __init__(self, config):
+        self.config = config
+    def crop_obj(self, img_path, obj_name,):
+        image_source = cv2.imread(img_path)
+        obj_image = image_source.copy()
+        bbox = self.config['bbox']
+        obj_image = obj_image[bbox[1]: bbox[3], bbox[0]: bbox[2], :]
+        return obj_image, bbox
 
 @PERCEPTION.register_module()
 class GroundingDinoCropper:

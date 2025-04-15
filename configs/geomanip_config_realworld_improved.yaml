@@ -1,6 +1,7 @@
 prompt_dir: &prompt_dir "vlm_query"
 bounds_min: &bounds_min [-0.5, -0.75, 0.0]
 bounds_min: &bounds_max [0.5, 1., 0.7]
+verbose: &verbose true
 vlm_api_key: &vlm_api_key "sk-b24ffb4725274f398d51d4aab97efe0d"
 vlm_base_url: &vlm_base_url "https://dashscope.aliyuncs.com/compatible-mode/v1"
 vlm_model: &vlm_model "qwen2.5-vl-72b-instruct"
@@ -31,6 +32,8 @@ pipeline:
             model: *vlm_model
             temperature: 0.8
             top_p: 0.5
+    interpolate_pos_step_size: 0.5
+    interpolate_rot_step_size: 0.3
     grasper:
       type: "NaiveGrasper"
       config:
@@ -40,18 +43,29 @@ pipeline:
     perception:
       type: GeometryParserMatcher
       config:
-        promt_dir: *prompt_dir
+        prompt_dir: *prompt_dir
+        verbose: *verbose
         mask_selector:
         filter_ratio: 0.1
         margin: 10
-        backbone: "swin"
+        backbone: "resnet50"
         database_root: "./database/"
-        feature_extractor_path: "./saved_pretrained/swin_base_patch4_window12_384_22kto1k.pth"
-        matcher_checkpoint_path: "./saved_pretrained/matcher_swin.pt"
+        feature_extractor_path: "./saved_pretrained/resnet50_a1h-35c100f8.pth"
+        matcher_checkpoint_path: "./saved_pretrained/matcher.pt"
+        max_retrieved_num: 20
         img_mean: [0.485, 0.456, 0.406]
         img_std: [0.229, 0.224, 0.225]
         img_size: 384
-        
+        score_threshold: 0.75
+        visualizer:
+          type: ImageVisualizer
+          config:
+            pop_window: false
+            save_dir: "./segm_results"
+        image_cropper:
+          type: NaiveCropper
+          config:
+            bbox: [560, 400, 1060, 700]
 
     # path_solver:
     #   type: PathSolver
@@ -102,8 +116,8 @@ pipeline:
         robot:
           type: UR5Robot
           config:
-            UR_robot_ID: 50001
-            UR_robot_port: 30002
+            UR_control_ID: 192.168.1.10
+            UR_receive_ID: 192.168.1.10
             UR_robot_home_pose: [0, 0.5, 0.4, 3.1415, 0, 0]
             approach0: [0, 0, 1]
             binormal0: [0, 1, 0]
@@ -113,9 +127,8 @@ pipeline:
           config:
             # Camera specific configs
             resolution: [1280, 720] # width, height
-            extrinsic: [[-0.18746593, 0.51792903,-0.83462929, 0.38557143], [ 0.98110535, 0.14011352,-0.13341847, 0.49040391], [0.04784155,-0.84387068,-0.53440945, 0.38047709]]
+            extrinsic: [[-0.18746593, 0.51792903,-0.83462929, 0.38557143], [ 0.98110535, 0.14011352,-0.13341847, 0.49040391], [0.04784155,-0.84387068,-0.53440945, 0.38047709], [0, 0, 0, 1]]
         updator:
           type: UpdateBySolver
           config:
             no_use:
-   

@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import math, copy
 from torch.autograd import Variable
 
-TRAIN = True
+TRAIN = False
 
 class MultiHeadedAttention(nn.Module):
     def __init__(self, h, d_model, dropout=0.1, use_sc=False):

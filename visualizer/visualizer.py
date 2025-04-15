@@ -5,7 +5,9 @@ import cv2
 import utils.transform_utils as T
 from utils.utils import filter_points_by_bounds, batch_transform_points, draw_arrow
 from scipy.spatial.transform import Rotation as R
+import os
 from utils.registry import VISUALIZERS
+from PIL import Image
 
 def add_to_visualize_buffer(visualize_buffer, visualize_points, visualize_colors):
     assert visualize_points.shape[0] == visualize_colors.shape[0], f'got {visualize_points.shape[0]} for points and {visualize_colors.shape[0]} for colors'
@@ -129,9 +131,15 @@ class SubgoalPathVisualizer:
 class ImageVisualizer:
     def __init__(self, config):
         self.config = config
+        save_dir = config['save_dir']
+        for file in os.listdir(save_dir):
+            os.remove(os.path.join(save_dir, file))
 
-    def show_img(self, rgb, text="", ):
-        cv2.imshow('img', rgb[..., ::-1])
-        cv2.waitKey(0)
-        print('showing image, click on the window and press "ESC" to close and continue')
+    def show_img(self, rgb, img_name=None, ):
+        if self.config['pop_window']:
+            cv2.imshow('img', rgb[..., ::-1])
+            print(f'showing image of {img_name}, click on the window and press "ESC" to close and continue')
+        else:
+            save_path = os.path.join(self.config['save_dir'], img_name + ".png")
+            Image.fromarray(rgb).save(save_path)
     

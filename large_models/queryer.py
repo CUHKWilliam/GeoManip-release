@@ -9,7 +9,7 @@ class WebQueryer:
         self.model = config['model']
         self.temperature = config['temperature']
         self.top_p = config['top_p']
-        self.client = OpenAI(api_key=config['api_key'])
+        self.client = OpenAI(api_key=config['api_key'], base_url=config['base_url'])
 
     def query(self, messages, stream=False):
         if "o1" not in self.model:

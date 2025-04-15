@@ -191,7 +191,7 @@ class DCAMA(nn.Module):
 
         return feats
 
-    def predict_mask_nshot(self, batch, nshot):
+    def predict_mask_nshot(self, batch, nshot, score_threshold=0.5):
         r""" n-shot inference """
         query_img = batch['query_img']
         support_imgs = batch['support_imgs']
@@ -254,7 +254,7 @@ class DCAMA(nn.Module):
                     n_support_feats.append(support_feats)
             
             ## TODO: retrieval V1 ##
-            MAX_SHOTS = 10
+            MAX_SHOTS = 30
             '''
             if len(n_support_feats) > MAX_SHOTS:
                 nshot = MAX_SHOTS   
@@ -466,7 +466,7 @@ class DCAMA(nn.Module):
             logit_mask = F.interpolate(logit_mask, org_qry_imsize, mode='bilinear', align_corners=True)
         else:
             logit_mask = F.interpolate(logit_mask, support_imgs[0].size()[2:], mode='bilinear', align_corners=True)
-        return (logit_mask - 0.).argmax(dim=1), n_simis, simi_map
+        return logit_mask[:, 1, :, :].sigmoid() > score_threshold, n_simis, simi_map
 
     def compute_objective(self, logit_mask, gt_mask):
         bsz = logit_mask.size(0)

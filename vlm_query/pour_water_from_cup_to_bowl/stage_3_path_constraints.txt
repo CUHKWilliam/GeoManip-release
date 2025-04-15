@@ -1,0 +1,12 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the opening of the cup", "the center of the body of the bowl", "the distance between the center of the opening of the cup and the center of the body of the bowl remains around 10 centimeters"> """
+    pc1 = get_point_cloud("the opening of the cup", -1)
+    pc2 = get_point_cloud("the body of the bowl", -1)
+
+    cup_opening_center = np.mean(pc1, axis=0)
+    bowl_center = np.mean(pc2, axis=0)
+    
+    distance = np.linalg.norm(cup_opening_center - bowl_center)
+    cost = abs(distance - 0.1)  # 10 cm
+    return cost
+

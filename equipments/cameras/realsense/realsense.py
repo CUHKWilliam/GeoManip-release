@@ -5,7 +5,7 @@ import open3d as o3d
 import os
 from ..camera_base import CameraBase
 from utils.registry import CAMERAS
-DEBUG = True
+DEBUG = False
 
 @CAMERAS.register_module()
 class RealSense(CameraBase):
@@ -61,7 +61,6 @@ class RealSense(CameraBase):
         vertices = np.asanyarray(points.get_vertices(dims=2))  
         w = depth_frame.get_width()
         h = depth_frame.get_height()
-        image_points = np.reshape(vertices, (h, w, 3))
 
 
         pc = rs.pointcloud()
@@ -69,13 +68,15 @@ class RealSense(CameraBase):
         pc.map_to(color_frame)
         vertices = np.asanyarray(points.get_vertices(dims=2)) 
         w = depth_frame.get_width()
-        image_Points = np.reshape(vertices , (-1,w,3))
+        image_points = np.reshape(vertices , (-1,w,3))
+        points = image_points.reshape(-1, 3)
+        points = (self.extrinsic @ np.concatenate([points, np.ones((len(points), 1))], axis=-1).T).T[:, :3]
+        points = points.reshape((-1, w, 3))
 
-        point_cloud = o3d.geometry.PointCloud()
         if mask is None:
-            return color_image, depth_image, image_Points.reshape(-1,3)
+            return color_image, depth_image, points.reshape(-1,3)
         else:
-            return color_image[mask], depth_image[mask], image_Points[mask].reshape(-1,3)
+            return color_image[mask], depth_image[mask], points[mask].reshape(-1,3)
     
     
     def update_image_depth(self):

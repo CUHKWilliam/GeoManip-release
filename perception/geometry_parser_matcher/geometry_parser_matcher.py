@@ -46,6 +46,7 @@ class GeometryParserMatcher:
         img_size = config['img_size']
         img_mean = config['img_mean']
         img_std = config['img_std']
+        self.max_retrieved_num = config['max_retrieved_num']
 
         self.transform = transforms.Compose([transforms.Resize(size=(img_size, img_size)),
                                             transforms.ToTensor(),
@@ -83,6 +84,7 @@ class GeometryParserMatcher:
         image_names = self.database[retrieved_desc]
         images = []
         masks = []
+        idx = 0
         for image_name in image_names:
             if "mask" in image_name:
                 continue
@@ -94,50 +96,27 @@ class GeometryParserMatcher:
             mask_path = os.path.join(self.config['database_root'], retrieved_desc, image_name + "_mask.png")
             mask = cv2.imread(mask_path)
             masks.append(mask)
+            if idx >= self.max_retrieved_num:
+                break
+            idx += 1
         return images, masks
 
     def try_parse(self, image_path, geometry):
         return self.parse(image_path, geometry)
     
-    def crop_obj(self, img_path, obj_name, ):
-        """
-        Crop object bounding box using GroundingDino
-        """
-        image_source = cv2.imread(img_path)
-        ## TODO: grounding dino can only take the nounce as input. Using 'a', 'the' degrades its performance severely.
-        obj_name = obj_name.replace("the", "").replace("a ", "").strip()
-
-        inputs = self.processor(images=Image.fromarray(image_source), text=obj_name)
-        for key in inputs:
-            inputs[key] = inputs[key].to(self.config['device'])
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-        results = self.processor.post_process_grounded_object_detection(
-            outputs,
-            inputs.input_ids,
-            box_threshold=self.box_threshold,
-            text_threshold=self.text_threshold,
-        )[0]
-        box = results['boxes'][0]
-        w, h = image_source.shape[1], image_source.shape[0]
-        box *= torch.tensor([w, h, w, h]).to(self.config['device'])
-        
-        h, w = image_source.shape[0], image_source.shape[1]
-        obj_image = image_source[max(int(box[1]) - self.margin, 0): min(int(box[3]) + self.margin, h - 1), max(int(box[0]) - self.margin, 0): min(int(box[2]) + self.margin, w - 1), :]
-        return obj_image, box
     
     def parse(self, image_path, geometry):
         if hasattr(self, "image_cropper"):
             original_image = cv2.imread(image_path)
-            obj_img, box = self.crop_obj(image_path, geometry)
-            image = obj_img
-
+            obj_img, box = self.image_cropper.crop_obj(image_path, geometry)
+            image = Image.fromarray(obj_img)
+        else:
+            image = Image.open(image_path).convert("RGB")
+            original_image = image
         support_images, support_masks = self.retrieve_images(geometry)
         nshot = len(support_images)
-        image = Image.open(image_path).convert("RGB")
         org_img_size = [image.size[0], image.size[1]]
         query_img = self.transform(image)
-   
         support_imgs = torch.stack([self.transform(Image.fromarray(support_img)) for support_img in support_images])
         for midx, smask in enumerate(support_masks):
             support_masks[midx] = F.interpolate(torch.from_numpy(smask[:, :, 0]).to(self.config['device']).unsqueeze(0).unsqueeze(0).float(), support_imgs.shape[-2:], mode='nearest').squeeze()
@@ -148,7 +127,7 @@ class GeometryParserMatcher:
             "support_masks": (support_masks > 0).float().to(self.config['device']).unsqueeze(0),
             "org_query_imsize": org_img_size
         }
-        pred_mask, _, _ = self.matcher.module.predict_mask_nshot(batch, nshot=nshot)
+        pred_mask, _, _ = self.matcher.module.predict_mask_nshot(batch, nshot=nshot, score_threshold=self.config['score_threshold'])
         pred_mask = pred_mask[0].detach().cpu().numpy()
         try_eroded_mask = cv2.erode(pred_mask.astype(np.uint8), np.ones((2, 2), np.uint8))
         if try_eroded_mask.sum() > 0:
@@ -156,10 +135,15 @@ class GeometryParserMatcher:
 
         if hasattr(self, "image_cropper"):
             h, w = original_image.shape[0], original_image.shape[1]
-            final_mask = np.zeros(tuple(org_img_size))
-            final_mask[max(int(box[1]) - self.margin, 0): min(int(box[3]) + self.margin, h - 1), max(int(box[0]) - self.margin, 0): min(int(box[2]) + self.margin, w - 1)] = pred_mask
+            final_mask = np.zeros([h, w]).astype(np.bool_)
+            final_mask[max(int(box[1]), 0): min(int(box[3]), h - 1), max(int(box[0]), 0): min(int(box[2]), w - 1)] = pred_mask
             pred_mask = final_mask
-        return final_mask
+        image_vis = np.asarray(original_image).copy()
+        image_vis[pred_mask] = np.array([255, 0, 0])
+        if self.config['verbose']:
+            self.visualizer.show_img(image_vis, geometry)
+            print(f"{geometry} parsed")
+        return pred_mask
 
 if __name__ == '__main__':
     config = {

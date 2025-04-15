@@ -1,4 +1,4 @@
-DEBUG = True
+DEBUG = False
 
 from utils.registry import ROBOTS
 from ..robot_base import RobotBase
@@ -16,7 +16,7 @@ from scipy.spatial.transform import Rotation as R
 from utils.utils import rotation_vector_to_quaternion
 from .gripper import Gripper
 import pickle
-from utils.utils import euler_to_rotation_vector
+from utils.utils import euler_to_rotation_vector, quaternion_to_rotation_vector
 
 @ROBOTS.register_module()
 class UR5Robot(RobotBase):
@@ -28,7 +28,6 @@ class UR5Robot(RobotBase):
 
         if DEBUG:
             return
-        
         self.UR_control_ID = config["UR_control_ID"]
         self.UR_receive_ID = config['UR_receive_ID']
         self.eef_to_grasp_dist = config['eef_to_grasp_dist']
@@ -58,6 +57,9 @@ class UR5Robot(RobotBase):
     def move_to_point(self, tar, v=0.1, a=0.1, transition=False):
         if DEBUG:
             return
+        if len(tar) == 7: # quaternion
+            tar = np.concatenate([tar[:3], quaternion_to_rotation_vector(tar[3:])])
+        assert len(tar) == 6
         # moveL in the base frame
         if not transition:
             self.rtde_c.moveL(tar, v, a)

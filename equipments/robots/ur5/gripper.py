@@ -2,7 +2,7 @@ import serial
 from time import sleep
 
 class Gripper():
-    def __init__(self,gripper_flag):
+    def __init__(self,gripper_flag=True):
         self.init_gripper(gripper_flag)
         self.gripper_open()
         

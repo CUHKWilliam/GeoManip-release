@@ -1,0 +1,40 @@
+def stage_4_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the surface of the table", "the center of the bottom of the cup", "the center of the bottom of the cup is above the surface of the table by 0 centimeters"> """
+    pc1 = get_point_cloud("the bottom of the cup", -1)
+    pc2 = get_point_cloud("the surface of the table", -1)
+
+    cup_bottom_center = np.mean(pc1, axis=0)
+    table_surface_center = np.mean(pc2, axis=0)
+    
+    vertical_distance = cup_bottom_center[2] - table_surface_center[2]
+    cost = abs(vertical_distance)
+    return cost
+
+def stage_4_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table"> """
+    pc1 = get_point_cloud("the gripper approach of the robot", -1)
+    pc2 = get_point_cloud("the surface of the table", -1)
+
+    # Calculate the heading direction of the gripper approach
+    covariance_matrix_gripper = np.cov(pc1.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_approach = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_approach[np.argmax(np.abs(gripper_approach))] < 0:
+        gripper_approach = -gripper_approach
+    gripper_approach = gripper_approach / np.linalg.norm(gripper_approach)
+
+    # Calculate the normal of the table surface
+    covariance_matrix_table = np.cov(pc2.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    table_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+    if table_normal[np.argmax(np.abs(table_normal))] < 0:
+        table_normal = -table_normal
+    table_normal = table_normal / np.linalg.norm(table_normal)
+
+    # Compute the dot product between the gripper approach and table normal
+    dot_product = np.dot(gripper_approach, table_normal)
+    
+    # gripper approach parallel to table normal
+    cost = (1 - abs(dot_product)) * 5.
+    return cost
+

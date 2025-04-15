@@ -19,7 +19,7 @@ from utils.registry import PERCEPTION
 from ..perception_base import PerceptionBase
 import cv2
 
-@DeprecationWarning("To be deprecated since it's too slow")
+@DeprecationWarning
 @PERCEPTION.register_module()
 class GeometryParser(PerceptionBase):
     def __init__(self, config):

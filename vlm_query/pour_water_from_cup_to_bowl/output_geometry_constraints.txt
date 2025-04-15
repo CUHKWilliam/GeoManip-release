@@ -1,0 +1,34 @@
+### Task Decomposition
+
+To pour water from the cup to the bowl, we can break down the task into the following stages:
+
+1. **Grasp the cup**
+2. **Align the cup with the bowl**
+3. **Tilt the cup to pour water into the bowl**
+4. **Place the cup back on the table**
+5. **Release the cup**
+
+### Geometric Constraint Generation
+
+#### Stage 1: Grasp the cup
+- **Sub-goal constraints**:
+  - <"grasp", "the handle of the cup">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+
+#### Stage 2: Align the cup with the bowl
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the opening of the cup", "the center of the body of the bowl", "the center of the opening of the cup is directly above the center of the body of the bowl by around 10 centimeters">
+
+#### Stage 3: Tilt the cup to pour water into the bowl
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the area of the handle of the cup", "the normal of the handle of the cup", "the area of the handle of the cup rotates around the normal of the handle of the cup by 45 degrees">
+  - <"path constraints", "the center of the opening of the cup", "the center of the body of the bowl", "the distance between the center of the opening of the cup and the center of the body of the bowl remains around 10 centimeters">
+
+#### Stage 4: Place the cup back on the table
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the surface of the table", "the center of the bottom of the cup", "the center of the bottom of the cup is above the surface of the table by 0 centimeters">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
+
+#### Stage 5: Release the cup
+- **Sub-goal constraints**:
+  - <"release">
