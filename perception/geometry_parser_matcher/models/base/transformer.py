@@ -5,10 +5,10 @@ import torch.nn.functional as F
 import math, copy
 from torch.autograd import Variable
 
-TRAIN = False
+TRAIN = True
 
 class MultiHeadedAttention(nn.Module):
-    def __init__(self, h, d_model, dropout=0.1, use_sc=False):
+    def __init__(self, h, d_model, dropout=0.1, use_sc=False, device="cuda:0"):
         "Take in model size and number of heads."
         super(MultiHeadedAttention, self).__init__()
         assert d_model % h == 0
@@ -49,7 +49,7 @@ class MultiHeadedAttention(nn.Module):
         x, self.attn = attention(query, key, value, mask=mask,
                                  dropout=self.dropout)
         if not TRAIN:
-            x = x.cuda()
+            x = x.to(self.device)
         # 3) "Concat" using a view and apply a final linear.
         return torch.mean(x, -3)
 

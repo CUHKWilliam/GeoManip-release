@@ -1,6 +1,6 @@
-from utils.registry import PERCEPTION
-from .models.DCAMA import DCAMA
-from .models.utils import to_device
+# from utils.registry import PERCEPTION
+from models.DCAMA import DCAMA
+from models.utils import to_device
 import torch
 import os
 import cv2
@@ -10,7 +10,7 @@ from torchvision import transforms
 from PIL import Image
 import numpy as np
 
-@PERCEPTION.register_module()
+# @PERCEPTION.register_module()
 class GeometryParserMatcher:
     def __init__(self, config):
         self.config = config
@@ -141,7 +141,10 @@ class GeometryParserMatcher:
         image_vis = np.asarray(original_image).copy()
         image_vis[pred_mask] = np.array([255, 0, 0])
         if self.config['verbose']:
-            self.visualizer.show_img(image_vis, geometry)
+            if hasattr(self, "visualizer"):
+                self.visualizer.show_img(image_vis, geometry)
+            else:
+                cv2.imwrite(f"test2_mask.png", image_vis)
             print(f"{geometry} parsed")
         return pred_mask
 
@@ -154,10 +157,13 @@ if __name__ == '__main__':
         "database_root": "../../database",
         "img_mean": [0.485, 0.456, 0.406],
         "img_std": [0.229, 0.224, 0.225],
-        "img_size": 384
+        "img_size": 384,
+        "max_retrieved_num": 30,
+        "score_threshold": 0.75,
+        "verbose": True
     }
     matcher = GeometryParserMatcher(config)
-    mask = matcher.parse("test.png", "the handle of the cup")
-    rgb = cv2.imread("test.png")
-    rgb[mask > 0] = [0, 0, 255]
-    cv2.imwrite('test_mask.png', rgb)
+    mask = matcher.parse("test2.png", "the handle of the cup")
+    rgb = cv2.imread("test2.png")
+    # rgb[mask > 0] = [0, 0, 255]
+    # cv2.imwrite('test_mask2.png', rgb)

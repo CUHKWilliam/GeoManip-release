@@ -11,6 +11,9 @@ class DataRecorderV1:
         self.is_grasped = 1
 
     def move_and_log(self, env, target_pose):
+        '''
+        
+        '''
         full_control_points = np.concatenate([
             np.concatenate(env.robot.get_current_pose()).reshape(1, -1),
             [target_pose],
