@@ -19,3 +19,10 @@ git clone https://github.com/CUHKWilliam/SteamBread-Robotics.git
 cd SteamBread-Robotics
 pip install -r requirements.txt
 ```
+
+## Basic Usage
+We provide example usages of this repository here. More details can be found in TODO
+### GeoManip-V2
+```
+python main.py --config ./configs/geomanip_config_realworld_improved.yaml
+```
