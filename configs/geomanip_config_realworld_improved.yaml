@@ -73,10 +73,10 @@ pipeline:
           config:
             pop_window: false
             save_dir: "./segm_results"
-        image_cropper:
-          type: NaiveCropper
-          config:
-            bbox: [560, 400, 1060, 700]
+        # image_cropper:
+        #   type: NaiveCropper
+        #   config:
+        #     bbox: [560, 400, 1060, 700]
 
     # path_solver:
     #   type: PathSolver
@@ -129,7 +129,7 @@ pipeline:
           config:
             UR_control_ID: 192.168.1.10
             UR_receive_ID: 192.168.1.10
-            UR_robot_home_pose: [0, 0.5, 0.4, 3.1415, 0, 0]
+            UR_robot_home_pose: [0.01758978976304442, 0.4972114599737929, 0.32363983715710937,  3.1415, 0, 0]
             approach0: [0, 0, 1]
             binormal0: [0, 1, 0]
             eef_to_grasp_dist: 0.15
@@ -137,8 +137,8 @@ pipeline:
           type: RealSense
           config:
             # Camera specific configs
-            resolution: [1280, 720] # width, height
-            extrinsic: [[-0.18746593, 0.51792903,-0.83462929, 0.38557143], [ 0.98110535, 0.14011352,-0.13341847, 0.49040391], [0.04784155,-0.84387068,-0.53440945, 0.38047709], [0, 0, 0, 1]]
+            resolution: [640, 480] # width, height
+            extrinsic: [[ 0.52513951, 0.23836212,-0.81695287, 0.440331928], [-0.58033752,-0.60183331,-0.54863926, 0.11598938], [-0.62244426, 0.76222055,-0.17771597, -0.05166546], [0, 0, 0, 1]]
         updator:
           type: UpdateBySolver
           config:

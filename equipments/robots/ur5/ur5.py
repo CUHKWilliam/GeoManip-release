@@ -35,7 +35,7 @@ class UR5Robot(RobotBase):
         self.rtde_init()
         self.soft_gripper = Gripper()
         ## TODO: home position
-        self.move_to_point(np.array(config['UR_robot_home_pose']))
+        # self.move_to_point(np.array(config['UR_robot_home_pose']))
 
     def rtde_init(self):
         self.rtde_c = RTDEControl(self.UR_control_ID)

@@ -15,13 +15,13 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--device", type=str, default="cuda:0")
-parser.add_argument("--data_root", type=str, default="plate")
+parser.add_argument("--data_root", type=str, default="database/table")
 args = parser.parse_args()
 
 device = args.device
 data_root = args.data_root
 
-sam = sam_model_registry["vit_h"]("../saved_pretrained/sam_vit_h_4b8939.pth").to(device)
+sam = sam_model_registry["vit_h"]("saved_pretrained/sam_vit_h_4b8939.pth").to(device)
 predictor = SamPredictor(sam)
 
 

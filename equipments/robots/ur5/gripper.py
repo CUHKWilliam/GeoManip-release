@@ -4,7 +4,7 @@ from time import sleep
 class Gripper():
     def __init__(self,gripper_flag=True):
         self.init_gripper(gripper_flag)
-        self.gripper_open()
+        # self.gripper_open()
         
     def init_gripper(self, gripper_flag):
         if gripper_flag:

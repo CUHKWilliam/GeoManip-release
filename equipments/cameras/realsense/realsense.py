@@ -7,6 +7,7 @@ from ..camera_base import CameraBase
 from utils.registry import CAMERAS
 DEBUG = False
 
+
 @CAMERAS.register_module()
 class RealSense(CameraBase):
     def __init__(self, config):
@@ -23,6 +24,9 @@ class RealSense(CameraBase):
         
     def start(self):
         self.profile = self.pipeline.start(self.config)
+        sensor = self.pipeline.get_active_profile().get_device().query_sensors()[1]
+        # Set the exposure anytime during the operation
+        sensor.set_option(rs.option.exposure, 200.000)
         return None
 
     def stop(self):
@@ -46,7 +50,8 @@ class RealSense(CameraBase):
     def update_frames(self, mask=None):
         if DEBUG:
             return np.zeros((100, 100, 3)).astype(np.uint8), np.zeros((100, 100)).astype(np.float32), np.zeros((10000, 3)).astype(np.float32)
-        frames = self.pipeline.wait_for_frames()
+        for _ in range(5):
+            frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
@@ -82,13 +87,14 @@ class RealSense(CameraBase):
     def update_image_depth(self):
         if DEBUG:
             return np.zeros((128, 128, 3)).astype(np.uint8), None
+        
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
 
         depth_image = np.asanyarray(depth_frame.get_data())
-        color_image = np.asanyarray(color_frame.get_data())
+        color_image = np.asanyarray(color_frame.get_data())[:, :, ::-1]
         return color_image, depth_image
 
 if __name__ == "__main__":
