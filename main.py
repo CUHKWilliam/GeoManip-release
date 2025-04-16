@@ -18,9 +18,15 @@ from large_models import *
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--task", type=str, default="Pour water from the cup to the bowl")
-parser.add_argument("--task_dir", type=str, default="vlm_query/pour_water_from_cup_to_bowl")
+# parser.add_argument("--task", type=str, default="Pour water from the cup to the bowl")
+# parser.add_argument("--task_dir", type=str, default="vlm_query/pour_water_from_cup_to_bowl")
+# parser.add_argument("--config_path", type=str, default="configs/geomanip_config_realworld_improved.yaml")
+
+parser.add_argument("--task", type=str, default="Put the kiwi onto the plate")
+parser.add_argument("--task_dir", type=str, default="vlm_query/place_kiwi_onto_plate")
 parser.add_argument("--config_path", type=str, default="configs/geomanip_config_realworld_improved.yaml")
+
+
 parser.add_argument("--device", type=str, default="cuda:0")
 args = parser.parse_args()
 

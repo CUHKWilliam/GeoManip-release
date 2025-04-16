@@ -24,7 +24,7 @@ def reshape(x, size):
 
 
 class DCAMA(nn.Module):
-    def __init__(self, backbone, pretrained_path, use_original_imgsize, use_sc=False, use_pruning=False, device='cuda'):
+    def __init__(self, backbone, pretrained_path, use_original_imgsize, use_sc=False, use_pruning=False, device='cuda:0'):
         super(DCAMA, self).__init__()
         self.use_sc = use_sc
         self.use_pruning = use_pruning
@@ -58,7 +58,7 @@ class DCAMA(nn.Module):
         # define model
         self.lids = reduce(add, [[i + 1] * x for i, x in enumerate(self.nlayers)])
         self.stack_ids = torch.tensor(self.lids).bincount()[-4:].cumsum(dim=0)
-        self.model = DCAMA_model(in_channels=self.feat_channels, stack_ids=self.stack_ids, use_sc=use_sc)
+        self.model = DCAMA_model(in_channels=self.feat_channels, stack_ids=self.stack_ids, use_sc=use_sc, device=device)
         
         ## TODO:
         
@@ -481,7 +481,7 @@ class DCAMA(nn.Module):
 
 
 class DCAMA_model(nn.Module):
-    def __init__(self, in_channels, stack_ids, use_sc=False):
+    def __init__(self, in_channels, stack_ids, use_sc=False, device="cuda:0",):
         super(DCAMA_model, self).__init__()
 
         self.stack_ids = stack_ids
@@ -490,7 +490,7 @@ class DCAMA_model(nn.Module):
         self.DCAMA_blocks = nn.ModuleList()
         self.pe = nn.ModuleList()
         for inch in in_channels[1:]:
-            self.DCAMA_blocks.append(MultiHeadedAttention(h=8, d_model=inch, dropout=0.5, use_sc=use_sc))
+            self.DCAMA_blocks.append(MultiHeadedAttention(h=8, d_model=inch, dropout=0.5, use_sc=use_sc, device=device))
             self.pe.append(PositionalEncoding(d_model=inch, dropout=0.5))
 
         outch1, outch2, outch3 = 16, 64, 128

@@ -92,5 +92,6 @@ class RealSense(CameraBase):
         return color_image, depth_image
 
 if __name__ == "__main__":
-    camera = Realsense()
+    camera = RealSense()
     color, depth = camera.update_image_depth()
+    cv2.imwrite("obs.png", color)

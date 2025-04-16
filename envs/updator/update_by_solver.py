@@ -20,6 +20,7 @@ class UpdateBySolver:
             else:
                 a_part_to_pts_dict[key] = a_part_to_pts_dict[key]
         return a_part_to_pts_dict
+    
     def transform_geometry(self, transform, a_part_to_pts_dict_, moving_part_names,):
         a_part_to_pts_dict = copy.deepcopy(a_part_to_pts_dict_)
         for part_name in a_part_to_pts_dict.keys():

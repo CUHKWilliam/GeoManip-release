@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import math, copy
 from torch.autograd import Variable
 
-TRAIN = True
+TRAIN = False ## TODO: the code need to be refracted !
 
 class MultiHeadedAttention(nn.Module):
     def __init__(self, h, d_model, dropout=0.1, use_sc=False, device="cuda:0"):
@@ -19,6 +19,7 @@ class MultiHeadedAttention(nn.Module):
         self.attn = None
         self.dropout = nn.Dropout(p=dropout)
         self.use_sc = use_sc
+        self.device=device
 
     def forward(self, query, key, value, mask=None):
         if mask is not None:

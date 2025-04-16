@@ -14,8 +14,8 @@ from segment_anything import SamPredictor, sam_model_registry
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--device", type=str, default="mps")
-parser.add_argument("--data_root", type=str, default="table")
+parser.add_argument("--device", type=str, default="cuda:0")
+parser.add_argument("--data_root", type=str, default="plate")
 args = parser.parse_args()
 
 device = args.device

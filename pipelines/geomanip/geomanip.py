@@ -112,11 +112,9 @@ class GeomanipPipeline(PipelineBase):
         self.grasp_name = None
 
     def execute(self, ):
-        self.environment.last_pose = np.concatenate(self.environment.robot.get_current_pose())
         while len(self.action_queue) > 0:
             next_action = self.action_queue.pop(0)
             self.environment.move_to_point(next_action)
-        self.environment.updator.update(self.environment)
         if self.grasp_state == 1:
             self.grasp_postprocess()
         else:
@@ -137,6 +135,5 @@ class GeomanipPipeline(PipelineBase):
             self.plan_paths(self.cost_functions, stage_idx)
             self.execute()
             self.environment.update_stage(stage_idx + 1)
-            import ipdb;ipdb.set_trace()
-        if hasattr(self.env, "data_recorder"):
-            self.env.data_recorder.save()
+        if hasattr(self.environment, "data_recorder"):
+            self.environment.data_recorder.save()

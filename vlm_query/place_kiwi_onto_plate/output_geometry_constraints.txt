@@ -1,0 +1,80 @@
+### Task Decomposition
+
+To put the kiwi onto the plate, we can break down the task into the following stages:
+
+1. **Grasp the kiwi**
+2. **Move the kiwi above the plate**
+3. **Lower the kiwi onto the plate**
+4. **Release the kiwi**
+
+### Geometric Constraint Generation
+
+#### Stage 1: Grasp the kiwi
+- **Sub-goal constraints**:
+  - <"grasp", "the area of the body of the kiwi">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the center of the body of the kiwi", "the heading direction of the gripper approach of the robot is perpendicular to the surface of the table and points towards the center of the body of the kiwi">
+  - <"sub-goal constraints", "the binormal of the gripper of the robot", "the axis of the kiwi", "the binormal of the gripper of the robot is parallel to the axis of the kiwi">
+
+#### Stage 2: Move the kiwi above the plate
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is directly above the center of the body of the plate by around 5 centimeters">
+  - <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is parallel to the plane of the top of the plate">
+
+#### Stage 3: Lower the kiwi onto the plate
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is on the plane of the top of the plate">
+  - <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is in contact with the plane of the top of the plate">
+
+#### Stage 4: Release the kiwi
+- **Sub-goal constraints**:
+  - <"release"> 
+
+### Python Code for Robot Manipulation
+
+```python
+def put_kiwi_on_plate():
+    # Stage 1: Grasp the kiwi
+    grasp_kiwi()
+    
+    # Stage 2: Move the kiwi above the plate
+    move_above_plate()
+    
+    # Stage 3: Lower the kiwi onto the plate
+    lower_onto_plate()
+    
+    # Stage 4: Release the kiwi
+    release_kiwi()
+
+def grasp_kiwi():
+    # Implement the grasping logic based on the geometric constraints
+    print("Grasping the kiwi...")
+    # Example code (pseudo-code):
+    # robot.gripper.approach(kiwi.center, perpendicular_to=table.surface)
+    # robot.gripper.binormal_parallel_to(kiwi.axis)
+    # robot.gripper.grasp(kiwi.area)
+
+def move_above_plate():
+    # Implement the movement logic based on the geometric constraints
+    print("Moving the kiwi above the plate...")
+    # Example code (pseudo-code):
+    # robot.move(kiwi.center, target=plate.center, offset=5_cm_above)
+    # robot.align_planes(kiwi.bottom_plane, plate.top_plane)
+
+def lower_onto_plate():
+    # Implement the lowering logic based on the geometric constraints
+    print("Lowering the kiwi onto the plate...")
+    # Example code (pseudo-code):
+    # robot.lower(kiwi.center, target=plate.center, until_contact=True)
+    # robot.align_planes(kiwi.bottom_plane, plate.top_plane, in_contact=True)
+
+def release_kiwi():
+    # Implement the releasing logic
+    print("Releasing the kiwi...")
+    # Example code (pseudo-code):
+    # robot.gripper.release()
+
+# Execute the task
+put_kiwi_on_plate()
+```
+
+This code provides a high-level structure for controlling the robot to perform the task. The actual implementation will depend on the specific robot API and control system being used.

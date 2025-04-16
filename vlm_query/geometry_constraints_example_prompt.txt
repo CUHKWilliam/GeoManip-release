@@ -9,14 +9,6 @@ Examples for geometric constraint generation and flow constraint generation for 
     - "place the teapot on the table near the cup" stage: (stage 4)
       - <"sub-goal constraints", "the surface of the table", "the center of the teapot spout of the teapot ", "the center of the teapot spout of the teapot is above the surface of the table by 30 cm">
 
-  - "put red block on top of the blue block":
-    - "grasp red block" stage:
-      - <"grasp", "the body of the red block">
-      - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the plane of the surface of the table", "the heading direction of the gripper approach of the robot is parallel to the normal of the surface of the table">
-    - "drop the red block on top of blue block" stage:
-      - <"sub-goal constraints", "the center of the red block", "the center of the blue block", "the center of the red block is directly above the center of the blue block around 20 centimeters">
-    - "release the red block" stage:
-      - <"release">
   - "open the door around the door hinge":
     - "grasp the door handle" stage:
       - <"grasp", "the handle of the door">

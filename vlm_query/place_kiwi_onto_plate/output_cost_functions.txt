@@ -1,0 +1,203 @@
+### Task Decomposition
+The task "Put the kiwi onto the plate" can be decomposed into the following stages:
+1. **Grasp the kiwi**
+2. **Move the kiwi above the plate**
+3. **Lower the kiwi onto the plate**
+4. **Release the kiwi**
+
+### Geometric Constraint Generation
+
+#### Stage 1: Grasp the kiwi
+- **Sub-goal constraints**:
+  - <"grasp", "the area of the body of the kiwi">
+  - <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the center of the body of the kiwi", "the heading direction of the gripper approach of the robot is perpendicular to the surface of the table and points towards the center of the body of the kiwi">
+  - <"sub-goal constraints", "the binormal of the gripper of the robot", "the axis of the kiwi", "the binormal of the gripper of the robot is parallel to the axis of the kiwi">
+
+#### Stage 2: Move the kiwi above the plate
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is directly above the center of the body of the plate by around 5 centimeters">
+  - <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is parallel to the plane of the top of the plate">
+
+#### Stage 3: Lower the kiwi onto the plate
+- **Sub-goal constraints**:
+  - <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is on the plane of the top of the plate">
+  - <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is in contact with the plane of the top of the plate">
+
+#### Stage 4: Release the kiwi
+- **Sub-goal constraints**:
+  - <"release">
+
+### Python Code for Robot Manipulation
+
+```python
+### <stage constraints splitter> ###
+### stage 1 sub-goal constraints
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the area of the body of the kiwi"> """
+    return grasp("the body of the kiwi")
+
+def stage_1_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the center of the body of the kiwi", "the heading direction of the gripper approach of the robot is perpendicular to the surface of the table and points towards the center of the body of the kiwi"> """
+    pc1 = get_point_cloud("the gripper approach of the robot", -1)
+    pc2 = get_point_cloud("the body of the kiwi", -1)
+    pc3 = get_point_cloud("the surface of the table", -1)
+
+    # Calculate the heading direction of the gripper approach
+    covariance_matrix_gripper = np.cov(pc1.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_approach = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_approach[np.argmax(np.abs(gripper_approach))] < 0:
+        gripper_approach = -gripper_approach
+
+    # Calculate the normal of the table surface
+    covariance_matrix_table = np.cov(pc3.T)
+    eigenvalues_table, eigenvectors_table = np.linalg.eig(covariance_matrix_table)
+    table_normal = eigenvectors_table[:, np.argmin(eigenvalues_table)]
+    if table_normal[np.argmax(np.abs(table_normal))] < 0:
+        table_normal = -table_normal
+
+    # Calculate the vector from gripper to kiwi center
+    gripper_center = np.mean(pc1, axis=0)
+    kiwi_center = np.mean(pc2, axis=0)
+    gripper_to_kiwi = kiwi_center - gripper_center
+    gripper_to_kiwi = gripper_to_kiwi / np.linalg.norm(gripper_to_kiwi)
+
+    # Check if gripper approach is perpendicular to table normal and points towards kiwi center
+    cost_perpendicular = abs(np.dot(gripper_approach, table_normal)) * 5.
+    cost_direction = 1 - np.dot(gripper_approach, gripper_to_kiwi)
+    
+    return cost_perpendicular + cost_direction
+
+def stage_1_subgoal_constraint3():
+    """constraints: <"sub-goal constraints", "the binormal of the gripper of the robot", "the axis of the kiwi", "the binormal of the gripper of the robot is parallel to the axis of the kiwi"> """
+    pc1 = get_point_cloud("the gripper binormal of the robot", -1)
+    pc2 = get_point_cloud("the body of the kiwi", -1)
+
+    # Calculate the binormal of the gripper
+    covariance_matrix_gripper = np.cov(pc1.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_binormal = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_binormal[np.argmax(np.abs(gripper_binormal))] < 0:
+        gripper_binormal = -gripper_binormal
+
+    # Calculate the axis of the kiwi
+    covariance_matrix_kiwi = np.cov(pc2.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_axis = eigenvectors_kiwi[:, np.argmax(eigenvalues_kiwi)]
+    if kiwi_axis[np.argmax(np.abs(kiwi_axis))] < 0:
+        kiwi_axis = -kiwi_axis
+
+    # Check if gripper binormal is parallel to kiwi axis
+    cost = 1 - abs(np.dot(gripper_binormal, kiwi_axis)) * 5.
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 2 sub-goal constraints
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is directly above the center of the body of the plate by around 5 centimeters"> """
+    pc1 = get_point_cloud("the body of the kiwi", -1)
+    pc2 = get_point_cloud("the body of the plate", -1)
+
+    # Compute the mean position of the body the kiwi and the body of the plate
+    kiwi_center = np.mean(pc1, axis=0)
+    plate_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(kiwi_center[:2] - plate_center[:2])
+    
+    # Calculate the center of the body of the kiwi should be 15 cm above the center of the body of the plate
+    vertical_distance = kiwi_center[2] - 0.15 - plate_center[2]
+    
+    cost = abs(vertical_distance) + horizontal_distance
+    
+    return cost
+
+def stage_2_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is parallel to the plane of the top of the plate"> """
+    pc1 = get_point_cloud("the bottom of the kiwi", -1)
+    pc2 = get_point_cloud("the top of the plate", -1)
+
+    # Calculate the normal of the bottom of the kiwi
+    covariance_matrix_kiwi = np.cov(pc1.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_bottom_normal = eigenvectors_kiwi[:, np.argmin(eigenvalues_kiwi)]
+    if kiwi_bottom_normal[np.argmax(np.abs(kiwi_bottom_normal))] < 0:
+        kiwi_bottom_normal = -kiwi_bottom_normal
+
+    # Calculate the normal of the top of the plate
+    covariance_matrix_plate = np.cov(pc2.T)
+    eigenvalues_plate, eigenvectors_plate = np.linalg.eig(covariance_matrix_plate)
+    plate_top_normal = eigenvectors_plate[:, np.argmin(eigenvalues_plate)]
+    if plate_top_normal[np.argmax(np.abs(plate_top_normal))] < 0:
+        plate_top_normal = -plate_top_normal
+
+    # Check if kiwi bottom normal is parallel to plate top normal
+    cost = 1 - abs(np.dot(kiwi_bottom_normal, plate_top_normal)) * 5.
+    
+    return cost
+
+### <stage constraints splitter> ###
+### stage 3 sub-goal constraints
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is on the plane of the top of the plate"> """
+    pc1 = get_point_cloud("the body of the kiwi", -1)
+    pc2 = get_point_cloud("the top of the plate", -1)
+
+    # Compute the mean position of the body the kiwi and the top of the plate
+    kiwi_center = np.mean(pc1, axis=0)
+    plate_top_center = np.mean(pc2, axis=0)
+
+    # Calculate the normal of the top of the plate
+    covariance_matrix_plate = np.cov(pc2.T)
+    eigenvalues_plate, eigenvectors_plate = np.linalg.eig(covariance_matrix_plate)
+    plate_top_normal = eigenvectors_plate[:, np.argmin(eigenvalues_plate)]
+    if plate_top_normal[np.argmax(np.abs(plate_top_normal))] < 0:
+        plate_top_normal = -plate_top_normal
+
+    # Calculate the distance from kiwi center to plate top plane
+    distance = np.dot(kiwi_center - plate_top_center, plate_top_normal)
+    
+    cost = abs(distance)
+    
+    return cost
+
+def stage_3_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is in contact with the plane of the top of the plate"> """
+    pc1 = get_point_cloud("the bottom of the kiwi", -1)
+    pc2 = get_point_cloud("the top of the plate", -1)
+
+    # Calculate the normal of the bottom of the kiwi
+    covariance_matrix_kiwi = np.cov(pc1.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_bottom_normal = eigenvectors_kiwi[:, np.argmin(eigenvalues_kiwi)]
+    if kiwi_bottom_normal[np.argmax(np.abs(kiwi_bottom_normal))] < 0:
+        kiwi_bottom_normal = -kiwi_bottom_normal
+
+    # Calculate the normal of the top of the plate
+    covariance_matrix_plate = np.cov(pc2.T)
+    eigenvalues_plate, eigenvectors_plate = np.linalg.eig(covariance_matrix_plate)
+    plate_top_normal = eigenvectors_plate[:, np.argmin(eigenvalues_plate)]
+    if plate_top_normal[np.argmax(np.abs(plate_top_normal))] < 0:
+        plate_top_normal = -plate_top_normal
+
+    # Check if kiwi bottom normal is parallel to plate top normal
+    cost_parallel = 1 - abs(np.dot(kiwi_bottom_normal, plate_top_normal)) * 5.
+
+    # Check if the distance between the two planes is zero
+    kiwi_bottom_center = np.mean(pc1, axis=0)
+    plate_top_center = np.mean(pc2, axis=0)
+    distance = np.dot(kiwi_bottom_center - plate_top_center, plate_top_normal)
+    cost_distance = abs(distance)
+    
+    return cost_parallel + cost_distance
+
+### <stage constraints splitter> ###
+### stage 4 sub-goal constraints
+def stage_4_subgoal_constraint1():
+    """constraints: <"release"> """
+    release()
+    return
+```
+
+This code provides a detailed implementation of the geometric constraints for each stage of the task "Put the kiwi onto the plate". The constraints ensure that the robot performs the task accurately and efficiently.

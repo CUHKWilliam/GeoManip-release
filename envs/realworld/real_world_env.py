@@ -104,10 +104,12 @@ class RealWorldEnv(EnvBase):
         return target_quat
 
     def move_to_point(self, target_pose):
+        self.last_pose = np.concatenate(self.robot.get_current_pose())    
         if hasattr(self, "data_recorder"):
             self.data_recorder.move_and_log(self, target_pose)
         else:
             self.robot.move_to_point(target_pose)
+        self.updator.update(self)
     
     def grasp(self,):
         if hasattr(self, "data_recorder"):

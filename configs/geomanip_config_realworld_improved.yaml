@@ -132,7 +132,7 @@ pipeline:
             UR_robot_home_pose: [0, 0.5, 0.4, 3.1415, 0, 0]
             approach0: [0, 0, 1]
             binormal0: [0, 1, 0]
-            eef_to_grasp_dist: 0.05
+            eef_to_grasp_dist: 0.15
         camera:
           type: RealSense
           config:
@@ -147,7 +147,6 @@ pipeline:
         data_recorder:
           type: DataRecorderV1
           config:
-            output_dir: record/data.pkl
-            opt_interpolate_pos_step_size: 0.02
-            opt_interpolate_rot_step_size: 0.10
-    
+            save_path: record/data1.pkl
+            interpolate_pos_step_size: 0.02
+            interpolate_rot_step_size: 0.10

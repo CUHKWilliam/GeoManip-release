@@ -10,7 +10,7 @@ Some examples:
   - "pouring tea from teapot":
     - 5 stages: "grasp teapot", "align teapot with cup", "tilt teapot clockwisely(anti-clockwisely)", "place the teapot on the table", "release"
   - "put red block on top of blue block":
-    - 3 stages: "grasp red block", "drop the red block on top of blue block"
+    - 4 stages: "grasp red block", "move the red block above the blue block by 15cm", "lower the red block down onto the blue block", "release"
   - "reorient bouquet and drop it upright into vase":
     - 3 stages: "grasp bouquet", "reorient bouquet", and "keep upright and drop into vase"
 2. Geometric constraint generation: For each stage except for the grasping and release stage, please write geometric constraints in lines. Each line represent a constraint should be satisfied. 

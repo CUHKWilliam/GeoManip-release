@@ -1,0 +1,43 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is directly above the center of the body of the plate by around 5 centimeters"> """
+    pc1 = get_point_cloud("the body of the kiwi", -1)
+    pc2 = get_point_cloud("the body of the plate", -1)
+
+    # Compute the mean position of the body the kiwi and the body of the plate
+    kiwi_center = np.mean(pc1, axis=0)
+    plate_center = np.mean(pc2, axis=0)
+    
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(kiwi_center[:2] - plate_center[:2])
+    
+    # Calculate the center of the body of the kiwi should be 15 cm above the center of the body of the plate
+    vertical_distance = kiwi_center[2] - 0.15 - plate_center[2]
+    
+    cost = abs(vertical_distance) + horizontal_distance
+    
+    return cost
+
+def stage_2_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the plane of the bottom of the kiwi", "the plane of the top of the plate", "the plane of the bottom of the kiwi is parallel to the plane of the top of the plate"> """
+    pc1 = get_point_cloud("the bottom of the kiwi", -1)
+    pc2 = get_point_cloud("the top of the plate", -1)
+
+    # Calculate the normal of the bottom of the kiwi
+    covariance_matrix_kiwi = np.cov(pc1.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_bottom_normal = eigenvectors_kiwi[:, np.argmin(eigenvalues_kiwi)]
+    if kiwi_bottom_normal[np.argmax(np.abs(kiwi_bottom_normal))] < 0:
+        kiwi_bottom_normal = -kiwi_bottom_normal
+
+    # Calculate the normal of the top of the plate
+    covariance_matrix_plate = np.cov(pc2.T)
+    eigenvalues_plate, eigenvectors_plate = np.linalg.eig(covariance_matrix_plate)
+    plate_top_normal = eigenvectors_plate[:, np.argmin(eigenvalues_plate)]
+    if plate_top_normal[np.argmax(np.abs(plate_top_normal))] < 0:
+        plate_top_normal = -plate_top_normal
+
+    # Check if kiwi bottom normal is parallel to plate top normal
+    cost = 1 - abs(np.dot(kiwi_bottom_normal, plate_top_normal)) * 5.
+    
+    return cost
+

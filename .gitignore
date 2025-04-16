@@ -10,3 +10,4 @@ saved_pretrained/*
 *.so
 */build/*
 gpd/models/*
+tmp/*

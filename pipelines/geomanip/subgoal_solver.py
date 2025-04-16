@@ -102,7 +102,7 @@ def objective(opt_vars,
         for part_name in transformed_part_to_pts_dict_3d_latest.keys():
             if part_name in moving_part_names:
                 part_pts = transformed_part_to_pts_dict_3d_latest[part_name]
-                transformed_part_to_pts_dict_3d_latest[part_name] = np.dot(part_pts, opt_pose_homo[:3, :3].T) + opt_pose_homo[:3, 3] + env.robot.approach0 * env.robot.eef_to_grasp_dist
+                transformed_part_to_pts_dict_3d_latest[part_name] = np.dot(part_pts, opt_pose_homo[:3, :3].T) + opt_pose_homo[:3, 3]
 
         transformed_part_to_pts_dict_3d.append(transformed_part_to_pts_dict_3d_latest)
         env.part_to_pts_dict_simulation = copy.deepcopy(transformed_part_to_pts_dict_3d)
