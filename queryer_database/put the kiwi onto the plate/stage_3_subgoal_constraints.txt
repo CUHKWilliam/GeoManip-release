@@ -1,0 +1,15 @@
+def stage_3_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the bottom surface of the body of the kiwi", "the surface of the body of the plate", "the bottom surface of the body of the kiwi touches the surface of the body of the plate"> """
+    pc1 = get_point_cloud("the bottom surface of the body of the kiwi", -1)
+    pc2 = get_point_cloud("the surface of the body of the plate", -1)
+
+    # Compute the mean position of the bottom surface of the kiwi and the surface of the plate
+    kiwi_bottom_center = np.mean(pc1, axis=0)
+    plate_surface_center = np.mean(pc2, axis=0)
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = kiwi_bottom_center[2] - plate_surface_center[2]
+
+    cost = abs(vertical_distance)
+    return cost
+

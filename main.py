@@ -1,3 +1,5 @@
+
+
 import numpy as np
 import os
 import open3d as o3d
@@ -27,7 +29,7 @@ parser.add_argument("--task_dir", type=str, default="vlm_query/place_kiwi_onto_p
 parser.add_argument("--config_path", type=str, default="configs/geomanip_config_realworld_improved.yaml")
 
 
-parser.add_argument("--device", type=str, default="cuda:0")
+parser.add_argument("--device", type=str, default="mps")
 args = parser.parse_args()
 
 

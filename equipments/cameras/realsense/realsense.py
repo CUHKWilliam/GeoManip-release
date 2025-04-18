@@ -5,7 +5,8 @@ import open3d as o3d
 import os
 from ..camera_base import CameraBase
 from utils.registry import CAMERAS
-DEBUG = False
+from PIL import Image
+DEBUG = True
 
 
 @CAMERAS.register_module()
@@ -49,9 +50,14 @@ class RealSense(CameraBase):
     
     def update_frames(self, mask=None):
         if DEBUG:
-            return np.zeros((100, 100, 3)).astype(np.uint8), np.zeros((100, 100)).astype(np.float32), np.zeros((10000, 3)).astype(np.float32)
-        for _ in range(5):
-            frames = self.pipeline.wait_for_frames()
+            img = np.asarray(Image.open("./realsense_debug_scene.png").convert("RGB"))
+            depth = np.zeros((img.shape[0], img.shape[1])).astype(np.float32)
+            points = np.zeros((img.shape[0], img.shape[1], 3)).astype(np.float32)
+            if mask is None:
+                return img, depth, points.reshape(((-1, 3)))
+            else:
+                return img[mask], depth[mask], points[mask].reshape(((-1, 3)))
+        frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
         depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
@@ -66,7 +72,6 @@ class RealSense(CameraBase):
         vertices = np.asanyarray(points.get_vertices(dims=2))  
         w = depth_frame.get_width()
         h = depth_frame.get_height()
-
 
         pc = rs.pointcloud()
         points = pc.calculate(depth_frame)

@@ -11,3 +11,6 @@ saved_pretrained/*
 */build/*
 gpd/models/*
 tmp/*
+const_gen_queyer_database/*
+cost_fns_queyer_database/*
+vlm_query/*

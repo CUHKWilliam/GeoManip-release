@@ -1,4 +1,4 @@
-DEBUG = False
+DEBUG = True
 
 from utils.registry import ROBOTS
 from ..robot_base import RobotBase

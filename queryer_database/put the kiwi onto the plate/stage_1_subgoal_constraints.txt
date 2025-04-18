@@ -1,0 +1,60 @@
+def stage_1_subgoal_constraint1():
+    """constraints: <"grasp", "the surface of the body of the kiwi"> """
+    return grasp("the surface of the body of the kiwi")
+
+def stage_1_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the heading direction of the gripper approach of the robot", "the center of the body of the kiwi", "the heading direction of the gripper approach of the robot is perpendicular to the surface of the body of the kiwi"> """
+    pc1 = get_point_cloud("the gripper approach of the robot", -1)
+    pc2 = get_point_cloud("the body of the kiwi", -1)
+
+    # Calculate the heading direction of the gripper approach
+    covariance_matrix_gripper = np.cov(pc1.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_approach = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_approach[np.argmax(np.abs(gripper_approach))] < 0:
+        gripper_approach = -gripper_approach
+
+    # Calculate the normal of the surface of the kiwi
+    covariance_matrix_kiwi = np.cov(pc2.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_surface_normal = eigenvectors_kiwi[:, np.argmin(eigenvalues_kiwi)]
+    if kiwi_surface_normal[np.argmax(np.abs(kiwi_surface_normal))] < 0:
+        kiwi_surface_normal = -kiwi_surface_normal
+
+    # Normalize both vectors
+    gripper_approach = gripper_approach / np.linalg.norm(gripper_approach)
+    kiwi_surface_normal = kiwi_surface_normal / np.linalg.norm(kiwi_surface_normal)
+
+    # Compute the dot product
+    dot_product = np.dot(gripper_approach, kiwi_surface_normal)
+    cost = abs(dot_product) * 5.0  # Perpendicular constraint
+    return cost
+
+def stage_1_subgoal_constraint3():
+    """constraints: <"sub-goal constraints", "the binormal of the gripper of the robot", "the axis of the kiwi", "the binormal of the gripper of the robot is parallel to the axis of the kiwi"> """
+    pc1 = get_point_cloud("the gripper binormal of the robot", -1)
+    pc2 = get_point_cloud("the body of the kiwi", -1)
+
+    # Calculate the binormal of the gripper
+    covariance_matrix_gripper = np.cov(pc1.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_binormal = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_binormal[np.argmax(np.abs(gripper_binormal))] < 0:
+        gripper_binormal = -gripper_binormal
+
+    # Calculate the axis of the kiwi
+    covariance_matrix_kiwi = np.cov(pc2.T)
+    eigenvalues_kiwi, eigenvectors_kiwi = np.linalg.eig(covariance_matrix_kiwi)
+    kiwi_axis = eigenvectors_kiwi[:, np.argmax(eigenvalues_kiwi)]
+    if kiwi_axis[np.argmax(np.abs(kiwi_axis))] < 0:
+        kiwi_axis = -kiwi_axis
+
+    # Normalize both vectors
+    gripper_binormal = gripper_binormal / np.linalg.norm(gripper_binormal)
+    kiwi_axis = kiwi_axis / np.linalg.norm(kiwi_axis)
+
+    # Compute the dot product
+    dot_product = np.dot(gripper_binormal, kiwi_axis)
+    cost = (1 - abs(dot_product)) * 5.0  # Parallel constraint
+    return cost
+

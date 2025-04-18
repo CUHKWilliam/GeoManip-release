@@ -1,0 +1,22 @@
+def stage_3_path_constraint1():
+    """constraints: <"path constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the distance between the center of the body of the kiwi and the center of the body of the plate remains unchanged"> """
+    pc1 = get_point_cloud("the body of the kiwi", -1)
+    pc2 = get_point_cloud("the body of the plate", -1)
+
+    # Compute the mean position of the kiwi and the plate
+    kiwi_center = np.mean(pc1, axis=0)
+    plate_center = np.mean(pc2, axis=0)
+
+    # Calculate the distance between the centers
+    distance = np.linalg.norm(kiwi_center - plate_center)
+
+    # Get the previous distance (from the previous stage)
+    pc1_prev = get_point_cloud("the body of the kiwi", -2)
+    pc2_prev = get_point_cloud("the body of the plate", -2)
+    kiwi_center_prev = np.mean(pc1_prev, axis=0)
+    plate_center_prev = np.mean(pc2_prev, axis=0)
+    prev_distance = np.linalg.norm(kiwi_center_prev - plate_center_prev)
+
+    cost = abs(distance - prev_distance)
+    return cost
+

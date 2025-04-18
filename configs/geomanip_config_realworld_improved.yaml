@@ -17,21 +17,50 @@ pipeline:
       config:
         prompt_dir: *prompt_dir
         cost_fns_queryer:
-          type: WebQueryer
+          #  -- config for web queryer ----
+          # type: WebQueryer
+          # config:
+          #   api_key: *llm_api_key
+          #   base_url: *llm_base_url
+          #   model: *llm_model
+          #   temperature: 0.8
+          #   top_p: 0.5
+
+          #  -- config for RAG queryer ----
+          type: RAGQueryer
           config:
-            api_key: *llm_api_key
-            base_url: *llm_base_url
-            model: *llm_model
-            temperature: 0.8
-            top_p: 0.5
+            database: cost_fns_queyer_database
+            key_file_name: key.txt
+            value_file_name: output_cost_functions.txt
+            local_model: qwen2.5:7b
+            local_service_port: 11344
+            database_dir: ./queryer_database/
+            service_name: "ollama1"
+            share_ollama: true
+
         constraint_generator_queryer:
-          type: WebQueryer
+         #  -- config for web queryer ----
+          # type: WebQueryer
+          # config:
+          #   api_key: *vlm_api_key
+          #   base_url: *vlm_base_url
+          #   model: *vlm_model
+          #   temperature: 0.8
+          #   top_p: 0.5
+
+          #  -- config for RAG queryer ----
+          type: RAGQueryer
           config:
-            api_key: *vlm_api_key
-            base_url: *vlm_base_url
-            model: *vlm_model
-            temperature: 0.8
-            top_p: 0.5
+            database: const_gen_queyer_database
+            key_file_name: key.txt
+            value_file_name: output_geometry_constraints.txt
+            local_model: qwen2.5:7b
+            local_service_port: 11344
+            database_dir: ./queryer_database/
+            service_name: "ollama1"
+            share_ollama: true
+
+
     interpolate_pos_step_size: 0.5
     interpolate_rot_step_size: 0.3
     grasper:

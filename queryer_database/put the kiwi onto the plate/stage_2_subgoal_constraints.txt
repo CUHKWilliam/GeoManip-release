@@ -1,0 +1,46 @@
+def stage_2_subgoal_constraint1():
+    """constraints: <"sub-goal constraints", "the center of the body of the kiwi", "the center of the body of the plate", "the center of the body of the kiwi is directly above the center of the body of the plate by around 5 centimeters"> """
+    pc1 = get_point_cloud("the body of the kiwi", -1)
+    pc2 = get_point_cloud("the body of the plate", -1)
+
+    # Compute the mean position of the kiwi and the plate
+    kiwi_center = np.mean(pc1, axis=0)
+    plate_center = np.mean(pc2, axis=0)
+
+    # Calculate the horizontal distance (x, y coordinates) between the centers
+    horizontal_distance = np.linalg.norm(kiwi_center[:2] - plate_center[:2])
+
+    # Calculate the vertical distance (z coordinate) between the centers
+    vertical_distance = kiwi_center[2] - (plate_center[2] + 0.05)  # 5 cm above
+
+    cost = abs(vertical_distance) + horizontal_distance
+    return cost
+
+def stage_2_subgoal_constraint2():
+    """constraints: <"sub-goal constraints", "the plane of the surface of the plate", "the heading direction of the gripper approach of the robot", "the heading direction of the gripper approach of the robot is parallel to the normal of the plane of the surface of the plate"> """
+    pc1 = get_point_cloud("the surface of the plate", -1)
+    pc2 = get_point_cloud("the gripper approach of the robot", -1)
+
+    # Calculate the normal of the surface of the plate
+    covariance_matrix_plate = np.cov(pc1.T)
+    eigenvalues_plate, eigenvectors_plate = np.linalg.eig(covariance_matrix_plate)
+    plate_surface_normal = eigenvectors_plate[:, np.argmin(eigenvalues_plate)]
+    if plate_surface_normal[np.argmax(np.abs(plate_surface_normal))] < 0:
+        plate_surface_normal = -plate_surface_normal
+
+    # Calculate the heading direction of the gripper approach
+    covariance_matrix_gripper = np.cov(pc2.T)
+    eigenvalues_gripper, eigenvectors_gripper = np.linalg.eig(covariance_matrix_gripper)
+    gripper_approach = eigenvectors_gripper[:, np.argmax(eigenvalues_gripper)]
+    if gripper_approach[np.argmax(np.abs(gripper_approach))] < 0:
+        gripper_approach = -gripper_approach
+
+    # Normalize both vectors
+    plate_surface_normal = plate_surface_normal / np.linalg.norm(plate_surface_normal)
+    gripper_approach = gripper_approach / np.linalg.norm(gripper_approach)
+
+    # Compute the dot product
+    dot_product = np.dot(plate_surface_normal, gripper_approach)
+    cost = (1 - abs(dot_product)) * 5.0  # Parallel constraint
+    return cost
+

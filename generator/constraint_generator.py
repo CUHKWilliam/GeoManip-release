@@ -179,7 +179,7 @@ class GeometricAndCodeGenerator:
         self.task_dir = task_dir
         if not os.path.exists(output_constraint_file) or overwrite:
             # stream back the response
-            output = self.constraint_generator_queryer.query(self.query_history, stream=True)
+            output = self.constraint_generator_queryer.query(self.query_history, instruction, stream=True)
             with open(output_constraint_file, "w") as f:
                 f.write(output)
         else:
@@ -190,12 +190,12 @@ class GeometricAndCodeGenerator:
             {"role": "system", "content": "{}".format(output)}
         )
     
-    def cost_fns_generation(self, task_dir=None, overwrite=False):
+    def cost_fns_generation(self, instruction, task_dir=None, overwrite=False):
         prompt = self.build_prompt_cost_functions()
         self.query_history.append(prompt)
         output_cost_file = os.path.join(task_dir, "output_cost_functions.txt")
         if not os.path.exists(output_cost_file) or overwrite:
-            output = self.cost_fns_queryer.query(self.query_history, stream=True)
+            output = self.cost_fns_queryer.query(self.query_history, instruction, stream=True)
             self.query_history.append(
                 {"role": "system", "content": "{}".format(output)}
             )
